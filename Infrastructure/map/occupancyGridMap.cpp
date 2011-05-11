@@ -1,4 +1,4 @@
-#include "../include/occupancyGridMap.h"
+#include "occupancyGridMap.h"
 #include <iostream>
 #include<stdio.h>
 

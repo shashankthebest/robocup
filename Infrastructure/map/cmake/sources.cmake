@@ -2,7 +2,7 @@
 #   - add your source files to YOUR_SRCS
 #   - to include subdirectories either
 #       - put each source file in YOUR_SRCS including a *relative* path
-#       - include add each subdirectory to YOUR_DIRS and put a cmake/sources.cmake in each
+#       - include another source.cmake for each subdirectory
 #
 #    Copyright (c) 2009 Jason Kulk
 #    This file is free software: you can redistribute it and/or modify
@@ -20,19 +20,12 @@ IF(DEBUG)
 ENDIF()
 
 ########## List your source files here! ############################################
-SET (YOUR_SRCS  NUBlackboard.cpp NUBlackboard.h
-                NUData.cpp NUData.h
+SET (YOUR_SRCS
+occupancyGridMap.cpp occupancyGridMap.h
 )
 ####################################################################################
 ########## List your subdirectories here! ##########################################
-SET (YOUR_DIRS  NUSensorsData
-                NUActionatorsData
-                NUImage
-                FieldObjects
-                Jobs
-                GameInformation
-                TeamInformation
-		map
+SET (YOUR_DIRS
 )
 ####################################################################################
 
