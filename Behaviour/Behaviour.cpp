@@ -2,19 +2,19 @@
     @brief Implementation of behaviour class
 
     @author Jason Kulk
- 
+
  Copyright (c) 2009 Jason Kulk
- 
+
  This file is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- 
+
  This file is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with NUbot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -36,6 +36,7 @@
 #include "MiscBehaviours/ScriptedPoseProvider.h"
 #include "MiscBehaviours/ForwardWalkProvider.h"
 #include "RoboPedestrian/RoboPedestrianProvider.h"
+#include "ActiveLocalisation/ActiveLocalisationProvider.h"
 
 #include "CameraCalibration/CameraCalibrationProvider.h"
 #include "EnvironmentalEmotions/EnvironmentalEmotionsProvider.h"
@@ -55,7 +56,7 @@ using namespace std;
 Behaviour::Behaviour()
 {
     #if defined(TARGET_IS_NAOWEBOTS)
-        m_behaviour = new SoccerProvider(this);
+        m_behaviour = new ActiveLocalisationProvider(this);  //new SoccerProvider(this);
     #elif defined(TARGET_IS_BEAR)
         m_behaviour = new BearModeProvider(this);
     #elif defined(TARGET_IS_CYCLOID)
@@ -74,7 +75,7 @@ Behaviour::~Behaviour()
 }
 
 /*! @brief The main behaviour process function.
-        
+
     Calls the process function of the current behaviour provider and handles change of provider when there is a next one.
 
     @param jobs the nubot job list
@@ -154,7 +155,7 @@ string Behaviour::simplifyName(const string& input)
     {
         currentletter = input.substr(j, 1);
         if (currentletter.compare(string(" ")) != 0 && currentletter.compare(string("_")) != 0 && currentletter.compare(string("/")) != 0 && currentletter.compare(string("\\")) != 0 && currentletter.compare(string(".")) != 0)
-            namebuffer += tolower(currentletter[0]);            
+            namebuffer += tolower(currentletter[0]);
     }
     return namebuffer;
 }

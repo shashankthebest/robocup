@@ -43,6 +43,7 @@
 #include "Infrastructure/FieldObjects/FieldObjects.h"
 #include "NUPlatform/NUPlatform.h"
 #include "Infrastructure/NUBlackboard.h"
+#include "Infrastructure/GameInformation/GameInformation.h"
 
 #include "Infrastructure/Jobs/MotionJobs/HeadJob.h"
 #include "Infrastructure/Jobs/MotionJobs/HeadPanJob.h"
@@ -84,9 +85,9 @@ ActiveLocalisationProvider::ActiveLocalisationProvider(Behaviour* manager) : Beh
     m_lineUp       = new TryLineUpState(this);
     m_kick         = new TryKickState(this);
 
-//    m_state = m_pause;
+    m_state = m_pause;
 
-    fixedBallDistance = 50;
+    fixedBallDistance = 100;
     fixedDuration = 5;
     landMarkId = 0;
 
@@ -107,14 +108,14 @@ ActiveLocalisationProvider::~ActiveLocalisationProvider()
     delete m_optimiser;
 }
 
-/*! @brief Handles state transitions common to all walk optimisation states
+/*! @brief Handles state transitions common to all states
  * 				- In webots this includes the timely termination of the simulation, and the automatix transition from paused to generate
  * 				- On a real robot this handles the automatic transition from paused to generate
  */
 BehaviourState* ActiveLocalisationProvider::nextStateCommons()
 {
- //   while (Blackboard->GameInfo->getCurrentState() != GameInformation::PlayingState)
-   //     m_game_info->doManualStateChange();
+    while (Blackboard->GameInfo->getCurrentState() != GameInformation::PlayingState)
+        m_game_info->doManualStateChange();
 
     #ifdef TARGET_IS_NAOWEBOTS
 		if (not m_optimiser and Platform->getTime() > 20*60*1e3)
@@ -128,22 +129,22 @@ BehaviourState* ActiveLocalisationProvider::nextStateCommons()
 			kill(getpid(), SIGKILL);
 		}
 
-	//	if (m_state == m_paused and Platform->getTime() > 1000)
-	//		return m_generate;
-	//	else
-	//		return m_state;
+		if (m_state == m_pause and Platform->getTime() > 15000)
+			return m_generate;
+		else
+			return m_state;
 	#else
-     //   if (m_state == m_paused and Platform->getTime() > 5000)
-      //      return m_generate;
-       // else
-        //    return m_state;
+        if (m_state == m_paused and Platform->getTime() > 5000)
+            return m_generate;
+        else
+            return m_state;
     #endif
 }
 
 /*! @brief Does behaviour common to all states */
 void ActiveLocalisationProvider::doBehaviourCommons()
 {;
-
+    //updateTime();
 
  /*   if (m_previous_state == m_paused and m_state == m_generate)
         m_jobs->addMotionJob(new WalkParametersJob(m_parameters));

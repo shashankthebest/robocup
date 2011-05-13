@@ -60,15 +60,18 @@ public:
     ActiveLocalisationState* m_lineUp;          //!< Approach the ball and perform a lineup
     ActiveLocalisationState* m_kick;            //!< Kick the ball into the goal
 
+
+    float fixedBallDistance;
+    float fixedDuration;
+    float landMarkId;
+    float ballCertainty;
 private:
 
 
     string m_id;								//!< the name of RL algo
     Optimiser* m_optimiser;                     //!< the RL algorithm
 
-    float fixedBallDistance;
-    float fixedDuration;
-    float landMarkId;
+
 
     float calculateFitness();					//!< calculates the fitness of the current episode
     vector<float> calculateFitnesses();			//!< calculates all of the fitnesses of the episode

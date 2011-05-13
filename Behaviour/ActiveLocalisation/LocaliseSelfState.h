@@ -46,8 +46,10 @@ public:
 	#if DEBUG_BEHAVIOUR_VERBOSITY > 3
         debug << "LocaliseSelfState::doState" << endl;
     #endif
+
         if (m_parent->stateChanged())
         {
+            cout<<"\nReached localise self state\n\n";
             m_jobs->addMotionJob(new WalkJob(0,0,0));
             vector<float> zero(m_actions->getSize(NUActionatorsData::Head), 0);
             m_jobs->addMotionJob(new HeadJob(m_actions->CurrentTime + 500, zero));

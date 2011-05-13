@@ -61,8 +61,10 @@ public:
     }
 
     ~GenerateEpisodeState() {};
+
+
     BehaviourState* nextState()
-    {   // progress to the evaluation state when we are in position AND lined up AND stopped
+    {   // progress to the localiseBall state when we know the parameters of this episode
 
         bool gettingup = false;
         m_data->get(NUSensorsData::MotionGetupActive, gettingup);
@@ -70,7 +72,7 @@ public:
         if (not gettingup)
         {
         	finish();
-            return m_parent->m_evaluate;
+            return m_parent->m_localiseBall;
         }
         else
             return this;
@@ -78,8 +80,11 @@ public:
 
     void doState()
     {
-
+        //Use the RL optimiser to generate new parameters
+        cout<<"\nInside Generate State\n\n\n";
     }
+
+
 private:
     bool m_previously_getting_up;
     bool m_getting_up;
