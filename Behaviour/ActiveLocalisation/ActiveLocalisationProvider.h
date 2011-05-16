@@ -28,6 +28,7 @@
 #include "Behaviour/BehaviourFSMProvider.h"
 #include "Tools/Optimisation/Parameter.h"
 #include "Infrastructure/map/occupancyGridMap.h"
+#include "Infrastructure/FieldObjects/FieldObjects.h"
 
 class ActiveLocalisationState;
 class Optimiser;
@@ -67,6 +68,7 @@ public:
     float landMarkId;
     float ballCertainty;
     OccupancyGridMap *m_globalMap;
+
 private:
 
 

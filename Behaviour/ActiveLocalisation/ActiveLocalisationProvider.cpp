@@ -94,8 +94,11 @@ ActiveLocalisationProvider::ActiveLocalisationProvider(Behaviour* manager) : Beh
 
     m_state = m_pause;
 
-    fixedBallDistance = 20;
-    fixedDuration = 5;
+
+
+
+    fixedBallDistance = 100;
+    fixedDuration = 2;
     landMarkId = 0;
 
     m_iteration_count = 0;
@@ -137,7 +140,10 @@ BehaviourState* ActiveLocalisationProvider::nextStateCommons()
 		}
 
 		if (m_state == m_pause)// and Platform->getTime() > 1000)
-			return m_generate;
+			{
+			    cout<<"\nreturned generate\n";
+			    return m_generate;
+			}
 		else
 			return m_state;
 	#else

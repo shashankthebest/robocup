@@ -29,6 +29,7 @@
 #include "Infrastructure/NUSensorsData/NUSensorsData.h"
 #include "Infrastructure/NUActionatorsData/NUActionatorsData.h"
 #include "Infrastructure/FieldObjects/FieldObjects.h"
+#include "Behaviour/BehaviourPotentials.h"
 
 #include "Infrastructure/Jobs/MotionJobs/WalkJob.h"
 #include "Infrastructure/Jobs/MotionJobs/HeadJob.h"
@@ -37,10 +38,21 @@
 
 class TryLineUpState : public ActiveLocalisationState
 {
+private:
+bool canKick;
 public:
-    TryLineUpState(ActiveLocalisationProvider* parent) : ActiveLocalisationState(parent) {};
+    TryLineUpState(ActiveLocalisationProvider* parent) : ActiveLocalisationState(parent)
+    {
+        canKick = false;
+    };
     virtual ~TryLineUpState() {};
-    virtual BehaviourState* nextState() {return this;};
+    virtual BehaviourState* nextState()
+    {
+        if(canKick)
+            return m_parent->m_kick;
+        else
+            return this;
+    };
     virtual void doState()
     {
 	#if DEBUG_BEHAVIOUR_VERBOSITY > 3
@@ -48,10 +60,54 @@ public:
     #endif
         if (m_parent->stateChanged())
         {
-            m_jobs->addMotionJob(new WalkJob(0,0,0));
-            vector<float> zero(m_actions->getSize(NUActionatorsData::Head), 0);
-            m_jobs->addMotionJob(new HeadJob(m_actions->CurrentTime + 500, zero));
+                    cout<<"\nReached line up state\n\n";
+
         }
+        tick();
+        #if DEBUG_BEHAVIOUR_VERBOSITY > 1
+            debug << "GoToBall" << endl;
+        #endif
+        Self& self  = m_field_objects->self;
+        MobileObject& ball = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL];
+        if (ball.isObjectVisible())
+            m_jobs->addMotionJob(new HeadTrackJob(ball));
+        else if (ball.TimeSinceLastSeen() > 250)
+            m_jobs->addMotionJob(new HeadPanJob(ball));
+
+        bool iskicking;
+        m_data->get(NUSensorsData::MotionKickActive, iskicking);
+        if(!iskicking)
+        {
+            vector<float> speed = BehaviourPotentials::goToBall(ball, self, BehaviourPotentials::getBearingToOpponentGoal(m_field_objects, m_game_info));
+            vector<float> result;
+            // decide whether we need to dodge or not
+            float leftobstacle = 255;
+            float rightobstacle = 255;
+            vector<float> temp;
+            if (m_data->get(NUSensorsData::LDistance, temp) and temp.size() > 0)
+                leftobstacle = temp[0];
+            if (m_data->get(NUSensorsData::RDistance, temp) and temp.size() > 0)
+                rightobstacle = temp[0];
+
+            // if the ball is too far away to kick and the obstable is closer than the ball we need to dodge!
+            if (ball.estimatedDistance() > 20 and min(leftobstacle, rightobstacle) < ball.estimatedDistance())
+                result = BehaviourPotentials::sensorAvoidObjects(speed, m_data, min(ball.estimatedDistance(), 25.0f), 75);
+            else
+                result = speed;
+
+            m_jobs->addMotionJob(new WalkJob(result[0], result[1], result[2]));
+        }
+
+
+
+        if( (ball.estimatedDistance() < 20.0f) && BehaviourPotentials::opponentsGoalLinedUp(m_field_objects, m_game_info))
+        {
+            canKick = true;
+
+        }
+
+
+
     };
 };
 

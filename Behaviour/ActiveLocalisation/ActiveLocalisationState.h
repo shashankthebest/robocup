@@ -30,6 +30,7 @@
 #include "Infrastructure/NUSensorsData/NUSensorsData.h"
 #include "Infrastructure/FieldObjects/FieldObjects.h"
 #include "Infrastructure/Jobs/JobList.h"
+#include "Infrastructure/NUBlackboard.h"
 
 #include "nubotconfig.h"
 #include "debug.h"
@@ -97,11 +98,18 @@ protected:
     virtual void tick()
     {
     	m_current_time = m_data->CurrentTime;
-    	m_current_position = m_field_objects->self.wmState();
+    	//m_current_position = m_field_objects->self.wmState();
+        float compass = 0;
+    	Blackboard->Sensors->getGps(m_current_position);
+    	Blackboard->Sensors->getCompass(compass );
+    	m_current_position[2] = compass;
+        m_parent->m_globalMap->positionUpdate(m_current_position[0],m_current_position[1],m_current_position[2]);
+    	//cout<<"\nCurrent Position    [ "<<m_current_position[0]<<" , "<<m_current_position[1]<<" , "<<m_current_position[2]*180/3.14<<" ] ";
+
     	updateTime();
 
         ///TODO: Also use SSL-Vision True position
-        m_parent->m_globalMap->positionUpdate(m_current_position[0],m_current_position[1],m_current_position[2]);
+
 
 
 		#if DEBUG_BEHAVIOUR_VERBOSITY > 1
