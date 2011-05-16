@@ -40,16 +40,31 @@ class LocaliseSelfState : public ActiveLocalisationState
 public:
     LocaliseSelfState(ActiveLocalisationProvider* parent) : ActiveLocalisationState(parent) {};
     virtual ~LocaliseSelfState() {};
-    virtual BehaviourState* nextState() {return this;};
+
+    virtual BehaviourState* nextState()
+    {
+        return this;
+    };
+
+
     virtual void doState()
     {
-	#if DEBUG_BEHAVIOUR_VERBOSITY > 3
-        debug << "LocaliseSelfState::doState" << endl;
-    #endif
+        #if DEBUG_BEHAVIOUR_VERBOSITY > 3
+            debug << "LocaliseSelfState::doState" << endl;
+        #endif
 
         if (m_parent->stateChanged())
         {
             cout<<"\nReached localise self state\n\n";
+
+            ///TODO: Change this to nearest landmark, or the landmark learned by rl
+            vector<float> goalPosition;
+            goalPosition = m_parent->m_globalMap->findObservation(0);
+
+            cout<<"\nFound Goal position [ "<<goalPosition[0]<<" , "<<goalPosition[1]<<" , "<<goalPosition[2]*180/3.14<<" ] \n\n";
+            lookAtGoals();
+         //   m_jobs->addMotionJob(
+
             m_jobs->addMotionJob(new WalkJob(0,0,0));
             vector<float> zero(m_actions->getSize(NUActionatorsData::Head), 0);
             m_jobs->addMotionJob(new HeadJob(m_actions->CurrentTime + 500, zero));

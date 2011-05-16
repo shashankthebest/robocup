@@ -19,7 +19,7 @@ struct mapElement
   unsigned char val;
 };
 
-class occupancyGridMap{
+class OccupancyGridMap{
 
 private:
 
@@ -57,7 +57,7 @@ int decayRate;
 	unsigned int getSize();
 
 	/// Constructor
-	occupancyGridMap(float min_x, float max_x, float min_y, float max_y,int res, int dr);
+	OccupancyGridMap(float min_x, float max_x, float min_y, float max_y,int res, int dr);
 
     /// Clear everything, in the map, retain its dimensions
 	void resetMap();
@@ -67,6 +67,7 @@ int decayRate;
 	void positionUpdate(float, float,float);
 
     vector<float> getRelativeDistance(int,int);
+
 
 	void initializeRobocupMap();
 
@@ -83,7 +84,7 @@ int decayRate;
 	void printMap();
 
 	/// Destructor
-	~occupancyGridMap();
+	~OccupancyGridMap();
 
 };
 

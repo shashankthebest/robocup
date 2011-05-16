@@ -100,6 +100,10 @@ protected:
     	m_current_position = m_field_objects->self.wmState();
     	updateTime();
 
+        ///TODO: Also use SSL-Vision True position
+        m_parent->m_globalMap->positionUpdate(m_current_position[0],m_current_position[1],m_current_position[2]);
+
+
 		#if DEBUG_BEHAVIOUR_VERBOSITY > 1
 			debug << "ActiveLocalisationState::tick(). position: " << m_current_position << " time: " << m_time_in_state <<  endl;
 		#endif

@@ -2,7 +2,7 @@
 #include <iostream>
 #include<stdio.h>
 
-occupancyGridMap::occupancyGridMap(float min_x, float max_x, float min_y, float max_y,int res, int dr)
+OccupancyGridMap::OccupancyGridMap(float min_x, float max_x, float min_y, float max_y,int res, int dr)
 	{
 	    resolution = res;
 		minX = min_x/resolution;
@@ -21,7 +21,7 @@ occupancyGridMap::occupancyGridMap(float min_x, float max_x, float min_y, float 
 
 	}
 
-void occupancyGridMap::positionUpdate(float x,float y ,float theta)
+void OccupancyGridMap::positionUpdate(float x,float y ,float theta)
 {
     myX = x/resolution;
     myY = y/resolution;
@@ -29,7 +29,7 @@ void occupancyGridMap::positionUpdate(float x,float y ,float theta)
 
 }
 
-unsigned char occupancyGridMap::f2b(float inp)
+unsigned char OccupancyGridMap::f2b(float inp)
 {
 	unsigned char retVal = 0;
 	if ( inp >= 1 )
@@ -50,7 +50,7 @@ unsigned char occupancyGridMap::f2b(float inp)
 }
 
 
-float occupancyGridMap::b2f(unsigned char inp)
+float OccupancyGridMap::b2f(unsigned char inp)
 {
 	float retVal = 0;
 	retVal = (int)inp;
@@ -71,7 +71,7 @@ float occupancyGridMap::b2f(unsigned char inp)
 }
 
 
-void occupancyGridMap::initializeMap()
+void OccupancyGridMap::initializeMap()
 {
     mapElement newEl;
     int counter =0 ;
@@ -100,7 +100,7 @@ void occupancyGridMap::initializeMap()
 	//cout<<"\nSize of vector : "<<map.size();
 }
 
-void occupancyGridMap:: initializeRobocupMap()
+void OccupancyGridMap:: initializeRobocupMap()
 {
 
     //  All cells are unknown
@@ -129,7 +129,7 @@ void occupancyGridMap:: initializeRobocupMap()
 }
 
 
-void occupancyGridMap::insertObservation(int xWorldPos, int yWorldPos,unsigned char type, float val)
+void OccupancyGridMap::insertObservation(int xWorldPos, int yWorldPos,unsigned char type, float val)
 {
     int xMapPos = xWorldPos/resolution;
     int yMapPos = yWorldPos/resolution;
@@ -143,7 +143,7 @@ void occupancyGridMap::insertObservation(int xWorldPos, int yWorldPos,unsigned c
 
 
 
-mapElement occupancyGridMap::getValue(int xWorldPos, int yWorldPos)
+mapElement OccupancyGridMap::getValue(int xWorldPos, int yWorldPos)
 {
     mapElement retVal;
 
@@ -162,7 +162,7 @@ mapElement occupancyGridMap::getValue(int xWorldPos, int yWorldPos)
 
 
 
-void occupancyGridMap::setValue(int xWorldPos, int yWorldPos, unsigned char type, float val)
+void OccupancyGridMap::setValue(int xWorldPos, int yWorldPos, unsigned char type, float val)
 {
     //cout<<"\n\n\n\n\n\n\n\n\n VAlue to set : "<<val;
 
@@ -181,34 +181,38 @@ void occupancyGridMap::setValue(int xWorldPos, int yWorldPos, unsigned char type
 }
 
 
-void occupancyGridMap::timeUpdate()
+void OccupancyGridMap::timeUpdate()
 {
     float val = 0, oldVal = 0, newVal = 0;
 
     for(unsigned int i=0 ; i<map.size() ; i++)
     {
-        oldVal = b2f(map[i].val);
-
-        if (oldVal >0 && oldVal<1)
+        if(map[i].type>3)  // if the observation is not one of the goal posts
         {
-            newVal = 0;
-            val =  (oldVal/decayRate);
+            oldVal = b2f(map[i].val);
 
-            newVal = 1/ ( 1 + (1-val)*(1-oldVal)/(oldVal*val) );
-           //newVal = 1 / ( 1 + ( (1 - currVal)*(1 - oldVal)/(oldVal*currVal)   )  );
+            if (oldVal >0 && oldVal<1)
+            {
+                newVal = 0;
+                val =  (oldVal/decayRate);
 
-           cout<<"\n Old Val = "<<oldVal<<"  currVal = "<<val <<"  NewVal = "<<newVal <<"   type = "<<((int)map[i].type);;
+                newVal = 1/ ( 1 + (1-val)*(1-oldVal)/(oldVal*val) );
+               //newVal = 1 / ( 1 + ( (1 - currVal)*(1 - oldVal)/(oldVal*currVal)   )  );
 
-           map[i].val = f2b(newVal);
+               cout<<"\n Old Val = "<<oldVal<<"  currVal = "<<val <<"  NewVal = "<<newVal <<"   type = "<<((int)map[i].type);;
 
+               map[i].val = f2b(newVal);
+
+            }
         }
+
     }
 
 }
 
 
 
-void occupancyGridMap::printMap()
+void OccupancyGridMap::printMap()
 {
 
     cout<<"\nSize of vector : "<<map.size()<<"\n\n";
@@ -278,14 +282,14 @@ cout<<"\n____________________________________________\n\n";
    // cout<<"\n\n Value at last element  "<<b2f(map[counter].val);
 }
 
-void occupancyGridMap::updateCurrentBelief(int x,int y,float theta)
+void OccupancyGridMap::updateCurrentBelief(int x,int y,float theta)
 {
     myX = x;
     myY = y;
     myTheta = theta;
 }
 
-vector<float> occupancyGridMap::getRelativeDistance(int x, int y)
+vector<float> OccupancyGridMap::getRelativeDistance(int x, int y)
 {
     vector<float> retValue;
     float relX,relY,relTheta;
@@ -306,7 +310,8 @@ vector<float> occupancyGridMap::getRelativeDistance(int x, int y)
     return retValue;
 }
 
-vector<float> occupancyGridMap::findObservation(unsigned int type)
+
+vector<float> OccupancyGridMap::findObservation(unsigned int type)
 {
 
     vector<float> retValue;
@@ -333,13 +338,13 @@ vector<float> occupancyGridMap::findObservation(unsigned int type)
 
 }
 
-unsigned int occupancyGridMap::getSize()
+unsigned int OccupancyGridMap::getSize()
 {
     return map.size()*2;
 }
 
 
-void occupancyGridMap::serializeMap(char* serialMap)
+void OccupancyGridMap::serializeMap(char* serialMap)
 {
     int j=0;
     for(unsigned int i=0 ; i<map.size() ; i++)
@@ -352,7 +357,7 @@ void occupancyGridMap::serializeMap(char* serialMap)
 
 }
 
-void occupancyGridMap::copyFromStream(char* serialMap)
+void OccupancyGridMap::copyFromStream(char* serialMap)
 {
   int j=0;
   for(unsigned int i=0 ; i<map.size() ; i++)
@@ -366,7 +371,7 @@ void occupancyGridMap::copyFromStream(char* serialMap)
 }
 
 
-occupancyGridMap::~occupancyGridMap()
+OccupancyGridMap::~OccupancyGridMap()
 {
 }
 

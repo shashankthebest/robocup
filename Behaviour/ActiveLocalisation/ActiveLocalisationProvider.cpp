@@ -84,10 +84,17 @@ ActiveLocalisationProvider::ActiveLocalisationProvider(Behaviour* manager) : Beh
     m_localiseBall = new LocaliseBallState(this);
     m_lineUp       = new TryLineUpState(this);
     m_kick         = new TryKickState(this);
+    m_globalMap    = new OccupancyGridMap(-300,300,-200,200,5,2);  // Map of robocup dimensions
+
+    m_globalMap->initializeMap();
+    m_globalMap->insertObservation(300,70,FieldObjects::FO_YELLOW_LEFT_GOALPOST, 0.99);
+    m_globalMap->insertObservation(300,-70,FieldObjects::FO_YELLOW_RIGHT_GOALPOST, 0.99);
+    m_globalMap->insertObservation(-300,70,FieldObjects::FO_BLUE_RIGHT_GOALPOST, 0.99);
+    m_globalMap->insertObservation(-300,-70,FieldObjects::FO_BLUE_LEFT_GOALPOST, 0.99);
 
     m_state = m_pause;
 
-    fixedBallDistance = 100;
+    fixedBallDistance = 20;
     fixedDuration = 5;
     landMarkId = 0;
 
@@ -104,7 +111,7 @@ ActiveLocalisationProvider::~ActiveLocalisationProvider()
     delete m_localiseBall;
     delete m_lineUp;
     delete m_kick;
-
+    delete m_globalMap;
     delete m_optimiser;
 }
 
@@ -129,7 +136,7 @@ BehaviourState* ActiveLocalisationProvider::nextStateCommons()
 			kill(getpid(), SIGKILL);
 		}
 
-		if (m_state == m_pause and Platform->getTime() > 15000)
+		if (m_state == m_pause)// and Platform->getTime() > 1000)
 			return m_generate;
 		else
 			return m_state;
