@@ -139,7 +139,7 @@ BehaviourState* ActiveLocalisationProvider::nextStateCommons()
 			kill(getpid(), SIGKILL);
 		}
 
-		if (m_state == m_pause)// and Platform->getTime() > 1000)
+		if (m_state == m_pause and Platform->getTime() > 4000)
 			{
 			    cout<<"\nreturned generate\n";
 			    return m_generate;
