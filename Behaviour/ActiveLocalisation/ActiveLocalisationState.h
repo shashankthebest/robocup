@@ -29,6 +29,7 @@
 #include "Infrastructure/Jobs/MotionJobs/HeadPanJob.h"
 #include "Infrastructure/NUSensorsData/NUSensorsData.h"
 #include "Infrastructure/FieldObjects/FieldObjects.h"
+#include "Infrastructure/FieldObjects/Self.h"
 #include "Infrastructure/Jobs/JobList.h"
 #include "Infrastructure/NUBlackboard.h"
 
@@ -105,6 +106,7 @@ protected:
     	m_current_position[2] = compass;
         m_parent->m_globalMap->positionUpdate(m_current_position[0],m_current_position[1],m_current_position[2]);
     	//cout<<"\nCurrent Position    [ "<<m_current_position[0]<<" , "<<m_current_position[1]<<" , "<<m_current_position[2]*180/3.14<<" ] ";
+        cout<<"\n Localisation Belief : ["<<Blackboard->Objects->self.wmX()<<" ," <<Blackboard->Objects->self.wmY()<<" , "<<Blackboard->Objects->self.Heading()<<" ] \n";
 
     	updateTime();
 
