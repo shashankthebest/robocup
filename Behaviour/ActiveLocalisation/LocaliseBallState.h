@@ -56,11 +56,11 @@ public:
     virtual BehaviourState* nextState()
     {
         tick();
-        if(reachedHalf)
-            return m_parent->m_localiseSelf;
-        else if (reachedBall)
-            return m_parent->m_kick;
-        else
+      //  if(reachedHalf)
+     //       return m_parent->m_localiseSelf;
+     //   else if (reachedBall)
+     //       return m_parent->m_kick;
+      //  else
             return this;
 	};
 

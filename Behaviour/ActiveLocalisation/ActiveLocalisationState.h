@@ -33,11 +33,13 @@
 #include "Infrastructure/Jobs/JobList.h"
 #include "Infrastructure/NUBlackboard.h"
 
+
 #include "nubotconfig.h"
 #include "debug.h"
 #include "debugverbositybehaviour.h"
 #include "Infrastructure/Jobs/MotionJobs/HeadTrackJob.h"
 #include "Infrastructure/Jobs/MotionJobs/HeadPanJob.h"
+
 
 class ActiveLocalisationState : public BehaviourState
 {
@@ -53,6 +55,9 @@ public:
     	m_current_position = m_current_target_state;
     	m_completed = false;
     	m_time_in_state = 0;
+
+
+
     };
     virtual ~ActiveLocalisationState() {};
     virtual BehaviourState* nextState() = 0;
@@ -101,12 +106,28 @@ protected:
     	m_current_time = m_data->CurrentTime;
     	//m_current_position = m_field_objects->self.wmState();
         float compass = 0;
+        float dx,dy,dt, wmx,wmy,wmt;
     	Blackboard->Sensors->getGps(m_current_position);
     	Blackboard->Sensors->getCompass(compass );
     	m_current_position[2] = compass;
         m_parent->m_globalMap->positionUpdate(m_current_position[0],m_current_position[1],m_current_position[2]);
-    	//cout<<"\nCurrent Position    [ "<<m_current_position[0]<<" , "<<m_current_position[1]<<" , "<<m_current_position[2]*180/3.14<<" ] ";
-        cout<<"\n Localisation Belief : ["<<Blackboard->Objects->self.wmX()<<" ," <<Blackboard->Objects->self.wmY()<<" , "<<Blackboard->Objects->self.Heading()<<" ] \n";
+    	  cout<<"\n Current GPS           [\t"<<m_current_position[0]<<" ,\t"<<m_current_position[1]<<" ,\t"<<m_current_position[2]*180/3.14<<" ] ";
+        wmx = Blackboard->Objects->self.wmX();
+        wmy = Blackboard->Objects->self.wmY();
+        wmt = Blackboard->Objects->self.Heading();
+        dx = m_current_position[0] - wmx;
+        dy = m_current_position[1] - wmy;
+        dt = m_current_position[2] - wmt;
+        int state = 0;
+        if(this == m_parent->m_localiseSelf)
+            state=1;
+        else if (this == m_parent->m_localiseBall)
+            state = 2;
+          cout<<"\n Localisation Belief : [\t"<<wmx<<" ,\t" <<wmy<<" ,\t"<<wmt<<" ] ";
+          cout<<"\n Error in Loc Belief : [\t"<<dx<<" ,\t" <<dy<<" ,\t"<<dt<<" ]\n";
+
+        m_parent->locAcc<<state<<", "<<m_current_position[0]<<", "<<m_current_position[1]<<", "<<m_current_position[2]
+        <<", "<<wmx<<", "<<wmy<<", "<<wmt<<", "<<dx<<", "<<dy<<", "<<dt<<"\n";
 
     	updateTime();
 
@@ -221,7 +242,7 @@ protected:
     vector<float> m_starting_position;			//!< the position [x,y,theta] at which the this state was entered
     vector<float> m_current_position;			//!< the current position [x,y,theta], when leaving this state, this will become the final position
     bool m_completed;							//!< true if the last time we were in this state, it completed successfully.
-
+    static void openFile();
     float m_time_in_state;						//!< the amount of time in ms spent in this state
 };
 

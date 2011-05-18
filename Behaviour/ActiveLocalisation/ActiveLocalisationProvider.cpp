@@ -86,6 +86,9 @@ ActiveLocalisationProvider::ActiveLocalisationProvider(Behaviour* manager) : Beh
     m_kick         = new TryKickState(this);
     m_globalMap    = new OccupancyGridMap(-300,300,-200,200,5,2);  // Map of robocup dimensions
 
+    locAcc.open("localisationAccuracy.log");
+
+
     m_globalMap->initializeMap();
     m_globalMap->insertObservation(300,70,FieldObjects::FO_YELLOW_LEFT_GOALPOST, 0.99);
     m_globalMap->insertObservation(300,-70,FieldObjects::FO_YELLOW_RIGHT_GOALPOST, 0.99);
@@ -116,6 +119,7 @@ ActiveLocalisationProvider::~ActiveLocalisationProvider()
     delete m_kick;
     delete m_globalMap;
     delete m_optimiser;
+    locAcc.close();
 }
 
 /*! @brief Handles state transitions common to all states

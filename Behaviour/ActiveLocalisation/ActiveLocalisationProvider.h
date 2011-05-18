@@ -68,6 +68,7 @@ public:
     float landMarkId;
     float ballCertainty;
     OccupancyGridMap *m_globalMap;
+    ofstream locAcc;
 
 private:
 
