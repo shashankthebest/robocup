@@ -68,6 +68,7 @@ int decayRate;
 
     vector<float> getRelativeDistance(int,int);
 
+    vector<float> getSelf();
 
 	void initializeRobocupMap();
 

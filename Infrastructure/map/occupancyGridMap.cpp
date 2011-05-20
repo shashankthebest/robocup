@@ -29,6 +29,15 @@ void OccupancyGridMap::positionUpdate(float x,float y ,float theta)
 
 }
 
+vector<float> OccupancyGridMap::getSelf()
+{
+    vector <float>retVal(3,0);
+    retVal[0] = myX;
+    retVal[1] = myY;
+    retVal[2] = myTheta;
+    return retVal;
+}
+
 unsigned char OccupancyGridMap::f2b(float inp)
 {
 	unsigned char retVal = 0;
