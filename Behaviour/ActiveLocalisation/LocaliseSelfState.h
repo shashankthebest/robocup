@@ -60,10 +60,10 @@ public:
         #if DEBUG_BEHAVIOUR_VERBOSITY > 3
             debug << "LocaliseSelfState::doState" << endl;
         #endif
-
         vector<float> goalPosition;
-        goalPosition = m_parent->m_globalMap->findObservation(1);
-        float elevation = 0;
+        goalPosition = m_parent->m_globalMap->findObservation(4);
+
+        float elevation = 0, dist = 0;
         if (m_parent->stateChanged())
         {
             cout<<"\nReached localise self state\n\n";
@@ -75,11 +75,14 @@ public:
             cout<<"\nCurrent Position    [ "<<m_current_position[0]<<" , "<<m_current_position[1]<<" , "<<rad2deg(normaliseAngle(m_current_position[2]))<<" ] ";
             cout<<"\nFound Goal position [ "<<goalPosition[0]<<" , "<<goalPosition[1]<<" , "<<rad2deg(normaliseAngle(goalPosition[2]))<<" ] \n\n";
             //lookAtGoals();
-            elevation = atan2( sqrt( goalPosition[0]*goalPosition[0] +  goalPosition[1]*goalPosition[1] ) , 55);
+            dist = sqrt( goalPosition[0]*goalPosition[0] +  goalPosition[1]*goalPosition[1] );
+            elevation = atan2(  dist , 55);
             cout<<"\nCalculated elevation : "<<elevation<<"\n";
             m_jobs->addMotionJob(new WalkJob(0,0,0));
-             m_jobs->addMotionJob(new HeadTrackJob(elevation ,goalPosition[2],0,0));
+            m_jobs->addMotionJob(new HeadTrackJob(elevation ,goalPosition[2],0,0));
+            m_jobs->addMotionJob(new HeadPanJob(HeadPanJob::Localisation, dist - 10, dist + 10, goalPosition[2] , goalPosition[2]  ));
         }
+
 
 
 
