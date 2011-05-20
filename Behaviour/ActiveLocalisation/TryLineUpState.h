@@ -33,6 +33,7 @@
 
 #include "Infrastructure/Jobs/MotionJobs/WalkJob.h"
 #include "Infrastructure/Jobs/MotionJobs/HeadJob.h"
+#include "Infrastructure/Jobs/MotionJobs/KickJob.h"
 
 #include "debug.h"
 
@@ -61,6 +62,14 @@ public:
         if (m_parent->stateChanged())
         {
                     cout<<"\nReached line up state\n\n";
+                    vector<float> ballPosition;
+                    ballPosition = m_parent->m_globalMap->findObservation(5);
+
+                    float dist = sqrt( ballPosition[0]*ballPosition[0] +  ballPosition[1]*ballPosition[1] );
+                    float elevation = atan2(  dist , 55);
+
+                    m_jobs->addMotionJob(new HeadTrackJob(elevation ,ballPosition[2],0,0));
+                    m_jobs->addMotionJob(new HeadPanJob(HeadPanJob::Localisation, dist - 2, dist + 2, ballPosition[2] , ballPosition[2] ));
 
         }
         tick();
@@ -102,7 +111,19 @@ public:
 
         if( (ball.estimatedDistance() < 20.0f) && BehaviourPotentials::opponentsGoalLinedUp(m_field_objects, m_game_info))
         {
-            canKick = true;
+            //canKick = true;
+
+                              cout<<"\nReached kick state\n\n";
+          Self& self  = m_field_objects->self;
+            MobileObject& ball = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL];
+            vector<float> kickPosition(2,0);
+            vector<float> targetPosition(2,0);
+            kickPosition[0] = ball.estimatedDistance() * cos(ball.estimatedBearing());
+            kickPosition[1] = ball.estimatedDistance() * sin(ball.estimatedBearing());
+            targetPosition[0] = kickPosition[0] + 1000.0f;
+            targetPosition[1] = kickPosition[1];
+            KickJob* kjob = new KickJob(0,kickPosition, targetPosition);
+            m_jobs->addMotionJob(kjob);
 
         }
 
