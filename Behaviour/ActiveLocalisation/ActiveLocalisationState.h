@@ -32,7 +32,7 @@
 #include "Infrastructure/FieldObjects/Self.h"
 #include "Infrastructure/Jobs/JobList.h"
 #include "Infrastructure/NUBlackboard.h"
-
+#include "Infrastructure/Jobs/VisionJobs/SaveImagesJob.h"
 
 #include "nubotconfig.h"
 #include "debug.h"
@@ -103,6 +103,9 @@ protected:
     /*! @brief Tick the walk optimisation state */
     virtual void tick()
     {
+        //SaveImagesJob *sij = new SaveImagesJob(true,false);
+        //m_jobs->addVisionJob(sij);
+
     	m_current_time = m_data->CurrentTime;
     	//m_current_position = m_field_objects->self.wmState();
         float compass = 0;
@@ -119,10 +122,14 @@ protected:
         dy = m_current_position[1] - wmy;
         dt = m_current_position[2] - wmt;
         int state = 0;
-        if(this == m_parent->m_localiseSelf)
-            state=1;
-        else if (this == m_parent->m_localiseBall)
-            state = 2;
+        if(this == m_parent->m_localiseBall)
+            state=5;
+        else if (this == m_parent->m_localiseSelf)
+            state = 10;
+        else if (this == m_parent->m_lineUp)
+            state = 15;
+        else if (this == m_parent->m_kick)
+            state = 20;
           cout<<"\n Localisation Belief : [\t"<<wmx<<" ,\t" <<wmy<<" ,\t"<<wmt<<" ] ";
           cout<<"\n Error in Loc Belief : [\t"<<dx<<" ,\t" <<dy<<" ,\t"<<dt<<" ]\n";
 
@@ -145,9 +152,7 @@ protected:
     virtual void finish()
     {
     	m_completed = true;
-		#if DEBUG_BEHAVIOUR_VERBOSITY > 0
-			debug << "ActiveLocalisationState::finish(). distance: " << distance() << " duration(): " << duration() << endl;
-		#endif
+
     }
 
     /* @brief Returns the start point for the optimisation state */
@@ -244,6 +249,7 @@ protected:
     bool m_completed;							//!< true if the last time we were in this state, it completed successfully.
     static void openFile();
     float m_time_in_state;						//!< the amount of time in ms spent in this state
+
 };
 
 #endif
