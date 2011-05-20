@@ -56,11 +56,11 @@ public:
     virtual BehaviourState* nextState()
     {
         tick();
-      //  if(reachedHalf)
-     //       return m_parent->m_localiseSelf;
-     //   else if (reachedBall)
-     //       return m_parent->m_kick;
-      //  else
+        if(reachedHalf)
+            return m_parent->m_localiseSelf;
+        else if (reachedBall)
+            return m_parent->m_kick;
+        else
             return this;
 	};
 
@@ -122,7 +122,17 @@ public:
                     m_jobs->addMotionJob(head);
                 }
                 else
+                {
                     reachedHalf = true;
+                    vector<float> myPos;
+                    myPos = m_parent->m_globalMap->getSelf();
+
+                    myPos[0] +=  balldistance*cos(ballbearing);
+                    myPos[1] +=  balldistance*sin(ballbearing);
+                    myPos[2]  =  ballbearing;
+                    m_parent->m_globalMap->insertObservation(myPos[0], myPos[0],5,0.99 );
+
+                }
 
             }
 
