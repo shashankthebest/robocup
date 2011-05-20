@@ -94,6 +94,7 @@ ActiveLocalisationProvider::ActiveLocalisationProvider(Behaviour* manager) : Beh
     m_globalMap->insertObservation(300,-70,FieldObjects::FO_YELLOW_RIGHT_GOALPOST, 0.99);
     m_globalMap->insertObservation(-300,70,FieldObjects::FO_BLUE_RIGHT_GOALPOST, 0.99);
     m_globalMap->insertObservation(-300,-70,FieldObjects::FO_BLUE_LEFT_GOALPOST, 0.99);
+    m_globalMap->insertObservation(-300,0,4, 0.99);
 
     m_state = m_pause;
 
@@ -101,7 +102,7 @@ ActiveLocalisationProvider::ActiveLocalisationProvider(Behaviour* manager) : Beh
 
 
     fixedBallDistance = 100;
-    fixedDuration = 2;
+    fixedDuration = 5;
     landMarkId = 0;
 
     m_iteration_count = 0;
