@@ -2,19 +2,19 @@
     @brief Implementation of nukick class
 
     @author Jed Rietveld
- 
+
  Copyright (c) 2010 Jed Rietveld
- 
+
  This file is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
- 
+
  This file is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
- 
+
  You should have received a copy of the GNU General Public License
  along with NUbot.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -43,7 +43,7 @@ NUKick::NUKick(NUWalk* walk, NUSensorsData* data, NUActionatorsData* actions) : 
 {
     m_walk = walk;
     m_kinematicModel = new Kinematics();
-    m_kinematicModel->LoadModel(std::string("None"));
+    m_kinematicModel->LoadModel();
     pose = DO_NOTHING;
     m_kickingLeg = noLeg;
 
@@ -347,9 +347,9 @@ void NUKick::stopLegs()
 }
 
 /*! @brief Process new sensor data, and produce actionator commands
- 
+
     @param data a pointer to the most recent sensor data storage class
-    @param actions a pointer to the actionators data storage class. 
+    @param actions a pointer to the actionators data storage class.
 */
 void NUKick::process(NUSensorsData* data, NUActionatorsData* actions)
 {
@@ -359,7 +359,7 @@ void NUKick::process(NUSensorsData* data, NUActionatorsData* actions)
         debug << "NUKick::process(" << data << ", " << actions << ")" << endl;
         debug << "NUKick::process in " << toString(pose) << " ready: " << m_kickReady << " active: " << m_kickActive << endl;
     #endif
-    
+
     m_data = data;
     m_actions = actions;
     m_previousTimestamp = m_currentTimestamp;
@@ -407,7 +407,7 @@ void NUKick::kickToPoint(const vector<float>& position, const vector<float>& tar
     // Evaluate the kicking target to start a new kick, or change a kick in progress.
 	m_ball_x = position[0];
 	m_ball_y = position[1];
-	
+
 	m_target_x = target[0];
 	m_target_y = target[1];
 	m_target_timestamp = Platform->getTime();
@@ -740,10 +740,10 @@ bool NUKick::doPreKick()
     vector<float> rightArmJoints;
     validData = validData && m_data->getPosition(NUSensorsData::LArm,leftArmJoints);
     validData = validData && m_data->getPosition(NUSensorsData::RArm,rightArmJoints);
-    
+
     if (not validData)
         return false;
-    
+
     static double endWaitTime = 0;
     if (m_kickWait)
     {
@@ -770,7 +770,7 @@ bool NUKick::doPreKick()
         m_estimatedStateCompleteTime = max(rightTime,leftTime);
         debug << "Moving to Initial Position: Estimated Completion Time = " << m_estimatedStateCompleteTime << endl;
     }
-    
+
     if(m_stateCommandGiven)
     {
         if((allEqual(m_leftLegInitialPose, leftJoints, 0.05f) && allEqual(m_leftLegInitialPose, rightJoints, 0.05f)) || (m_data->CurrentTime - m_estimatedStateCompleteTime > 200.0))
@@ -1201,7 +1201,7 @@ void NUKick::BalanceCoPLevelTorso(legId_t theLeg, vector<float>& jointAngles, fl
     jointAngles[5] += gainx * asin(deltax / 35.0f);
     // Hip Pitch - Reverse of pitch to maintain vertical torso.
     jointAngles[1] = -(jointAngles[3] + jointAngles[5]);
-    
+
     return;
 }
 
@@ -1495,7 +1495,7 @@ bool NUKick::SwingLegForward(legId_t p_kickingLeg, float speed)
             kickingTargets[1] = endHipAngle;
             kickingTargets[3] = endKneeAngle;
             FlattenFoot(kickingTargets);
-            
+
             m_estimatedStateCompleteTime = MoveLimbToPositionWithSpeed(kickingLeg,kickingLegJoints,kickingTargets,swingSpeed, 80.0f, 1.0f);
             m_stateCommandGiven = true;
 
@@ -1635,7 +1635,7 @@ bool NUKick::chooseLeg()
 {
     //currently must be at zero position
 	double theta = 0;//atan2(m_target_y-m_ball_y, m_target_x-m_ball_x);
-	
+
 	//approximate, assume robot torso moves negligible amount and only rotates
 	double xtrans = m_ball_x*cos(theta) + m_ball_y*sin(theta);
 	double ytrans = m_ball_y*cos(theta) - m_ball_x*sin(theta);
@@ -1680,7 +1680,7 @@ bool NUKick::chooseLeg()
         if(fabs(theta) < fwdAngleRange)
         {
             #if DEBUG_NUMOTION_VERBOSITY > 1
-            debug << "Right foot: " << endl << RightFootForwardKickableArea.MinX() << " < " << leftFootRelativeBallLocation.x << " < " << RightFootForwardKickableArea.MaxX() << endl;
+            debug << "Right foot: " << endl << RightFootForwardKickableArea.MinX() << " < " << rightFootRelativeBallLocation.x << " < " << RightFootForwardKickableArea.MaxX() << endl;
             debug << RightFootForwardKickableArea.MinY() << " < " << leftFootRelativeBallLocation.y << " < " << RightFootForwardKickableArea.MaxY() << endl;
             debug << "Left foot: " << endl << LeftFootForwardKickableArea.MinX() << " < " << rightFootRelativeBallLocation.x << " < " << LeftFootForwardKickableArea.MaxX() << endl;
             debug << LeftFootForwardKickableArea.MinY() << " < " << rightFootRelativeBallLocation.y << " < " << LeftFootForwardKickableArea.MaxY() << endl;
@@ -1736,7 +1736,7 @@ bool NUKick::chooseLeg()
                 kickSelected = true;
             }
         }
-    
+
         if(!kickSelected)
             stop();
         else
@@ -1755,7 +1755,7 @@ double NUKick::MoveLimbToPositionWithSpeed(NUActionatorsData::id_t limbId, vecto
     #if DEBUG_NUMOTION_VERBOSITY > 3
         debug << "NUKick::MoveLimbToPositionWithSpeed(" << limbId.Name << "," << currentPosition << "," << targetPosition << "," << maxSpeed << "," << gain << "," << smoothness << endl;
     #endif
-    
+
     const float movespeed = maxSpeed;
     vector< vector<float> > positions;
     vector< vector<float> > velocities;
@@ -1765,7 +1765,7 @@ double NUKick::MoveLimbToPositionWithSpeed(NUActionatorsData::id_t limbId, vecto
     double moveTime = 1000*(maxDifference(currentPosition, targetPosition)/movespeed);
     float startTime = m_data->CurrentTime;
     float endTime = startTime + moveTime;
-    
+
     #if DEBUG_NUMOTION_VERBOSITY > 3
         debug << "NUKick::MoveLimbToPositionWithSpeed: moveTime: " << moveTime << " startTime: " << startTime << " endTime: " << endTime << endl;
     #endif
@@ -1784,28 +1784,28 @@ double NUKick::MoveLegsToPositionWithSpeed(const vector<float>& targetPosition, 
     vector<float> left_currentPosition, right_currentPosition;
     m_data->getPosition(NUSensorsData::LLeg, left_currentPosition);
     m_data->getPosition(NUSensorsData::RLeg, right_currentPosition);
-    
+
     const float movespeed = maxSpeed;
     vector< vector<float> > positions;
     vector< vector<float> > velocities;
     vector< vector<double> > times;
-    
+
     // compute the time required to move into the initial pose for each limb
     double left_moveTime = 1000*(maxDifference(left_currentPosition, targetPosition)/movespeed);
     double right_moveTime = 1000*(maxDifference(right_currentPosition, targetPosition)/movespeed);
     double moveTime = max(left_moveTime, right_moveTime);
-    
+
     float startTime = m_data->CurrentTime;
     float endTime = startTime + moveTime;
-    
+
     vector<double> endTimes(1,endTime);
     vector< vector<float> > endPositions(1, targetPosition);
-    
+
     MotionCurves::calculate(startTime,endTimes,left_currentPosition,endPositions,smoothness,10,times,positions,velocities);
     m_actions->add(NUActionatorsData::LLeg, times, positions, gain);
-    
+
     MotionCurves::calculate(startTime,endTimes,right_currentPosition,endPositions,smoothness,10,times,positions,velocities);
     m_actions->add(NUActionatorsData::RLeg, times, positions, gain);
-    
+
     return endTime;
 }
