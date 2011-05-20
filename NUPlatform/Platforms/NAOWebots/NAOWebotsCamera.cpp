@@ -51,7 +51,7 @@ NAOWebotsCamera::NAOWebotsCamera(NAOWebotsPlatform* platform)
 #endif
     
     m_image = new NUImage(m_width, m_height, false);
-    m_yuyv_buffer = new Pixel[m_totalpixels*2];
+    m_yuyv_buffer = new Pixel[m_totalpixels];
 }
 
 /*! @brief Destory the NAOWebotsCamera
