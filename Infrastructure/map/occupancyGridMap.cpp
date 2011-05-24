@@ -1,6 +1,9 @@
 #include "occupancyGridMap.h"
 #include <iostream>
 #include<stdio.h>
+#include <algorithm>
+#include <vector>
+using namespace std;
 
 OccupancyGridMap::OccupancyGridMap(float min_x, float max_x, float min_y, float max_y,int res, int dr)
 	{
@@ -347,6 +350,73 @@ vector<float> OccupancyGridMap::findObservation(unsigned int type)
 
 }
 
+
+vector<float> OccupancyGridMap::findBestObservation(unsigned int typeMin, unsigned int typeMax)
+{
+    vector<float> bestObservation;
+    vector<float> allObservations;
+    vector<float> temp;
+    vector<float> thetas;
+    float relX,relY,relTheta;
+
+    for(unsigned int i=0; i<map.size();i++)
+    {
+        if(   (map[i].type >= typeMin)  and (map[i].type <= typeMax) )
+        {
+            temp = getRelativeDistance(map[i].x, map[i].y);
+            relX = temp[0];
+            relY = temp[1];
+            relTheta = temp[2];
+            allObservations.push_back(relX);
+            allObservations.push_back(relY);
+            allObservations.push_back(relTheta);
+            thetas.push_back(relTheta);
+        }
+    }
+
+
+    vector<float>::const_iterator it;
+
+
+    it = min_element(thetas.begin(), thetas.end());
+
+    int idx = thetas.begin() - it;
+
+    bestObservation.push_back(allObservations[idx-2]);
+    bestObservation.push_back(allObservations[idx-1]);
+    bestObservation.push_back(allObservations[idx]);
+
+    return bestObservation;
+
+}
+
+
+vector<float> OccupancyGridMap::findBestObservation(vector<float> allObservations)
+{
+    vector<float> thetas;
+    vector<float> bestObservation;
+
+    for(unsigned int i=0; i<allObservations.size();i+=2)
+    {
+        thetas.push_back(allObservations[i]);
+    }
+
+    vector<float>::const_iterator it;
+
+
+    it = min_element(thetas.begin(), thetas.end());
+
+    int idx = thetas.begin() - it;
+
+    bestObservation.push_back(allObservations[idx-2]);
+    bestObservation.push_back(allObservations[idx-1]);
+    bestObservation.push_back(allObservations[idx]);
+
+     return bestObservation;
+}
+
+
+
 unsigned int OccupancyGridMap::getSize()
 {
     return map.size()*2;
@@ -371,12 +441,10 @@ void OccupancyGridMap::copyFromStream(char* serialMap)
   int j=0;
   for(unsigned int i=0 ; i<map.size() ; i++)
     {
-
         map[i].type = serialMap[j];
         map[i].val = serialMap[j+1];
         j+=2;
     }
-
 }
 
 

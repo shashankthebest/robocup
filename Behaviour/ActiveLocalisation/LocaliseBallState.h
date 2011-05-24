@@ -124,13 +124,13 @@ public:
                 else
                 {
                     reachedHalf = true;
-                    vector<float> myPos;
-                    myPos = m_parent->m_globalMap->getSelf();
+                    vector<float> ballPos;
+                    ballPos = m_parent->m_globalMap->getSelf();
 
-                    myPos[0] +=  balldistance*cos(ballbearing);
-                    myPos[1] +=  balldistance*sin(ballbearing);
-                    myPos[2]  =  ballbearing;
-                    m_parent->m_globalMap->insertObservation(myPos[0], myPos[0],5,0.99 );
+                    ballPos[0] +=  balldistance*cos(ballbearing);
+                    ballPos[1] +=  balldistance*sin(ballbearing);
+                    ballPos[2]  =  ballbearing;
+                    m_parent->m_globalMap->insertObservation(ballPos[0], ballPos[1],5,0.99 );
 
                 }
 

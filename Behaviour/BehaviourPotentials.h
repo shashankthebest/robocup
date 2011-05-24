@@ -1,12 +1,12 @@
 /*! @file BehaviourPotentials.h
     @brief Declaration of the behaviour motor schemas (aka potentials or vector fields)
- 
+
     Functions in this file return a vector (trans_speed, trans_direction, rotational_speed).
 
     @author Jason Kulk
- 
+
   Copyright (c) 2010 Jason Kulk
- 
+
     This file is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -36,10 +36,10 @@
 #include <string>
 using namespace std;
 
-class BehaviourPotentials 
+class BehaviourPotentials
 {
 public:
-    /*! @brief Returns a vector to go to a field state 
+    /*! @brief Returns a vector to go to a field state
         @param self the self field object
         @param fieldstate the absolute position on the field [x(cm), y(cm), heading(rad)]
         @param stoppeddistance the distance in cm to the target at which the robot will stop walking, ie the accurarcy required.
@@ -51,8 +51,8 @@ public:
         vector<float> relativestate = self.CalculateDifferenceFromFieldState(fieldstate);
         return goToPoint(relativestate[0], relativestate[1], relativestate[2], stoppeddistance, stoppingdistance, turningdistance);
     }
-    
-    /*! @brief Returns a vector to go to a field state 
+
+    /*! @brief Returns a vector to go to a field state
         @param distance to the distance to the point
         @param bearing to the point
         @param heading the desired heading at the point
@@ -86,8 +86,8 @@ public:
             return result;
         }
     }
-    
-    /*! @brief Returns a vector to avoid a field state 
+
+    /*! @brief Returns a vector to avoid a field state
         @param self the self field object
         @param fieldstate the absolute position on the field [x(cm), y(cm)]
         @param objectsize the radius in cm of the object to avoid
@@ -99,10 +99,10 @@ public:
         if (fieldstate.size() < 3)
             fieldstate.push_back(0);
         vector<float> relativestate = self.CalculateDifferenceFromFieldState(fieldstate);
-        
+
         float distance = relativestate[0];
         float bearing = relativestate[1];
-        
+
         if (distance > dontcaredistance)
         {   // if the object is too far away don't avoid it
             return result;
@@ -126,11 +126,11 @@ public:
                 result[2] = atan2(y - mathGeneral::sign(y)*objectsize, x);
             else
                 result[2] = 0;
-            
+
             return result;
         }
     }
-    
+
     /*! @brief Returns a vector to go to a ball
      */
     static vector<float> goToBall(MobileObject& ball, Self& self, float heading, float kickingdistance = 15.0, float stoppingdistance = 65)
@@ -143,9 +143,9 @@ public:
             float distance = sqrt(x*x + y*y);
             float bearing = atan2(y,x);
             float heading = ball.estimatedBearing();
-            
+
             vector<float> speed = goToPoint(distance, bearing, 0, 0, 0, distance+9000);
-            
+
             #if DEBUG_BEHAVIOUR_VERBOSITY > 1
                 debug << "goToBall Predicated x:" << x << " y: " << y << " ballx: " << ball.estimatedDistance()*cos(heading) << " bally: " << ball.estimatedDistance()*sin(heading) << endl;
             #endif
@@ -158,16 +158,16 @@ public:
 
             float x = distance * cos(bearing);
             float y = distance * sin(bearing);
-            
+
             const float offsetDistance = 5.0f;
             float left_foot_x = x + offsetDistance * cos(heading - mathGeneral::PI/2);
             float left_foot_y = y + offsetDistance * sin(heading - mathGeneral::PI/2);
             float left_foot_distance = sqrt(pow(left_foot_x,2) + pow(left_foot_y,2));
-            
+
             float right_foot_x = x + offsetDistance * cos(heading + mathGeneral::PI/2);
             float right_foot_y = y + offsetDistance * sin(heading + mathGeneral::PI/2);
             float right_foot_distance = sqrt(pow(right_foot_x,2) + pow(right_foot_y,2));
-      
+
             if(left_foot_distance < right_foot_distance)
             {   // if the calculated left foot position is closer, then pick that one
                 x = left_foot_x;
@@ -204,12 +204,12 @@ public:
                 position_direction = bearing;
                 position_rotation = 0.5*bearing;
             }
-            
+
             // calculate the component to go around the ball to face the heading
             float around_speed;
             float around_direction;
             float around_rotation;
-            if (distance < 1.5*stoppingdistance)
+            if (distance < 3*stoppingdistance) // original was 1.5
             {   // if we are close enough to worry about the heading
                 const float heading_gain = 0.5;
                 const float heading_threshold = mathGeneral::PI/2;
@@ -221,7 +221,7 @@ public:
                     around_direction = mathGeneral::normaliseAngle(bearing + mathGeneral::PI/2);
                 else
                     around_direction = mathGeneral::normaliseAngle(bearing - mathGeneral::sign(heading)*mathGeneral::PI/2);
-                
+
                 around_rotation = -mathGeneral::sign(around_direction)*around_speed*11/distance;        // 11 is rough speed in cm/s
             }
             else
@@ -230,7 +230,7 @@ public:
                 around_direction = 0;
                 around_rotation = 0;
             }
-            
+
             vector<float> speed(3,0);
             speed[0] = max(position_speed, around_speed);
             float xsum = position_speed*cos(position_direction) + around_speed*cos(around_direction);
@@ -240,7 +240,7 @@ public:
             return speed;
         }
     }
-    
+
     /*! @brief Returns a the vector sum of the potentials
         @param potentials a list of [trans_speed, trans_direction, rot_speed] vectors
      */
@@ -264,7 +264,7 @@ public:
         result[2] = yawsum;
         return result;
     }
-    
+
     /*! @brief Returns a vector as close to the original as possible without hitting obstacles detected by the sensors
         @param speed the desired speed as [trans_speed, trans_direction, rot_speed]
      */
@@ -278,7 +278,7 @@ public:
             leftobstacle = temp[0];
         if (sensors->get(NUSensorsData::RDistance, temp) and temp.size() > 0)
             rightobstacle = temp[0];
-        
+
         if (fabs(speed[1]) > mathGeneral::PI/2)
         {   // if the speed is not in the range of the ultrasonic sensors then don't both dodging
             return speed;
@@ -296,7 +296,7 @@ public:
                 dodgeangle = mathGeneral::PI/2 + asin((objectsize - obstacle)/objectsize);
             else                                // if we are 'outside' the object
                 dodgeangle = asin(objectsize/obstacle);
-            
+
             if (leftobstacle <= rightobstacle)
             {   // the obstacle is on the left
                 if (speed[1] > -dodgeangle)
@@ -310,7 +310,7 @@ public:
             return newspeed;
         }
     }
-    
+
     /*! @brief Returns the opponent's goal */
     static StationaryObject& getOpponentGoal(FieldObjects* fieldobjects, GameInformation* gameinfo)
     {
@@ -321,21 +321,21 @@ public:
         else
             return yellowgoal;
     }
-    
+
     /*! @brief Returns the relative position of the opponent's goal [distance, bearing] */
     static vector<float> getOpponentGoalPosition(FieldObjects* fieldobjects, GameInformation* gameinfo)
     {
         StationaryObject& opponentgoal = getOpponentGoal(fieldobjects, gameinfo);
         return fieldobjects->self.CalculateDifferenceFromGoal(opponentgoal);
     }
-    
+
     /*! @brief Returns the bearing to the opponent's goal */
     static float getBearingToOpponentGoal(FieldObjects* fieldobjects, GameInformation* gameinfo)
     {
         vector<float> position = getOpponentGoalPosition(fieldobjects, gameinfo);
         return position[1];
     }
-    
+
     /*! @brief Returns your own goal */
     static StationaryObject& getOwnGoal(FieldObjects* fieldobjects, GameInformation* gameinfo)
     {
@@ -346,14 +346,14 @@ public:
         else
             return bluegoal;
     }
-    
+
     /*! @brief Return the relative position of your own goal [distance, bearing] */
     static vector<float> getOwnGoalPosition(FieldObjects* fieldobjects, GameInformation* gameinfo)
     {
         StationaryObject& owngoal = getOwnGoal(fieldobjects, gameinfo);
         return fieldobjects->self.CalculateDifferenceFromGoal(owngoal);
     }
-    
+
     /*! @brief Returns the bearing to your own goal */
     static float getBearingToOwnGoal(FieldObjects* fieldobjects, GameInformation* gameinfo)
     {
@@ -369,21 +369,21 @@ public:
         targetposition[0] = ball.X();
         if (fabs(targetposition[0]) > 180)          // clip the target position to 1.2m from the goal
             targetposition[0] = mathGeneral::sign(targetposition[0])*180;
-        
+
         // I need a cost metric here that includes the current position of the robot, so that it does not cross the field unnecessarily
-        // b_y > 0 probably choose right, b_y < 0 probably choose left, 
+        // b_y > 0 probably choose right, b_y < 0 probably choose left,
         // if s_y < b_y probably choose right s_y > b_y probably choose left
-        float b_y = ball.Y(); 
+        float b_y = ball.Y();
         float s_y = self.wmY();
         float cost = -b_y + 1.0*(s_y - b_y);
         if (cost < 0)
             targetposition[1] = b_y - distancefromball;
         else
             targetposition[1] = b_y + distancefromball;
-        
+
         // convert to relative coords
         vector<float> polar = self.CalculateDifferenceFromFieldLocation(targetposition);
-        
+
         // convert to cartesian
         vector<float> cartesian(2,0);
         cartesian[0] = polar[0]*cos(polar[1]);

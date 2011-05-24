@@ -81,6 +81,8 @@ int decayRate;
 
     vector<float> findObservation(unsigned int type);
 
+    vector<float> findBestObservation(unsigned int typeMin, unsigned int typeMax);
+    vector<float> findBestObservation(vector<float>);
 
 	void printMap();
 
