@@ -114,7 +114,7 @@ protected:
     	Blackboard->Sensors->getCompass(compass );
     	m_current_position[2] = compass;
         m_parent->m_globalMap->positionUpdate(m_current_position[0],m_current_position[1],m_current_position[2]);
-    	  cout<<"\n Current GPS           [\t"<<m_current_position[0]<<" ,\t"<<m_current_position[1]<<" ,\t"<<m_current_position[2]*180/3.14<<" ] ";
+    	  //cout<<"\n Current GPS           [\t"<<m_current_position[0]<<" ,\t"<<m_current_position[1]<<" ,\t"<<m_current_position[2]*180/3.14<<" ] ";
         wmx = Blackboard->Objects->self.wmX();
         wmy = Blackboard->Objects->self.wmY();
         wmt = Blackboard->Objects->self.Heading();
@@ -130,7 +130,7 @@ protected:
             state = 15;
         else if (this == m_parent->m_kick)
             state = 20;
-          cout<<"\n Localisation Belief : [\t"<<wmx<<" ,\t" <<wmy<<" ,\t"<<wmt<<" ] ";
+         // cout<<"\n Localisation Belief : [\t"<<wmx<<" ,\t" <<wmy<<" ,\t"<<wmt<<" ] ";
           cout<<"\n Error in Loc Belief : [\t"<<dx<<" ,\t" <<dy<<" ,\t"<<dt<<" ]\n";
 
         m_parent->locAcc<<state<<", "<<m_current_position[0]<<", "<<m_current_position[1]<<", "<<m_current_position[2]
