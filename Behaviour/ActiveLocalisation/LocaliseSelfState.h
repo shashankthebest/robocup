@@ -60,15 +60,19 @@ public:
         #if DEBUG_BEHAVIOUR_VERBOSITY > 3
             debug << "LocaliseSelfState::doState" << endl;
         #endif
-        vector<float> landmarkPosition;
-        landmarkPosition = m_parent->m_globalMap->findBestObservation(0,4);
+
 
         float elevation = 0, dist = 0;
         if (m_parent->stateChanged())
         {
-            cout<<"\nReached localise self state\n\n";
+            start();
             tick();
-            ///TODO: Change this to nearest landmark, or the landmark learned by rl
+            vector<float> landmarkPosition;
+            landmarkPosition = m_parent->m_globalMap->findBestObservation(1,5);
+
+            cout<<"\nReached localise self state\n\n";
+
+            ///TODO: Change this to the landmark learned by rl
 
 
 
