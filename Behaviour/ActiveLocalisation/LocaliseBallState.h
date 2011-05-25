@@ -71,6 +71,12 @@ public:
         debug << "LocaliseBallState::doState" << endl;
     #endif
 
+            if (m_parent->stateChanged())
+            {
+                reachedBall = false;
+                reachedHalf = false;
+            }
+
             if (m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].isObjectVisible())
             {
                // cout<<"\n\nBall Visible, going towards it\n\n";
@@ -130,7 +136,7 @@ public:
                     ballPos[0] +=  balldistance*cos(ballbearing);
                     ballPos[1] +=  balldistance*sin(ballbearing);
                     ballPos[2]  =  ballbearing;
-                    m_parent->m_globalMap->insertObservation(ballPos[0], ballPos[1],5,0.99 );
+                    m_parent->m_globalMap->insertObservation(ballPos[0], ballPos[1],6,0.99 ); // use ball id = 6
 
                 }
 
