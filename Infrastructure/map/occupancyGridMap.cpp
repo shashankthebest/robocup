@@ -2,6 +2,7 @@
 #include <iostream>
 #include<stdio.h>
 #include <algorithm>
+#include "Tools/Math/General.h"
 #include <vector>
 using namespace std;
 
@@ -351,40 +352,68 @@ vector<float> OccupancyGridMap::findObservation(unsigned int type)
 }
 
 
+void OccupancyGridMap::clearObservation(unsigned int type)
+{
+    for(unsigned int i=0; i<map.size();i++)
+    {
+        if(map[i].type == type)
+        {
+            map[i].x = 0;
+            map[i].y = 0;
+            map[i].type = 0;
+            map[i].val = 0;
+
+        }
+    }
+
+
+}
+
 vector<float> OccupancyGridMap::findBestObservation(unsigned int typeMin, unsigned int typeMax)
 {
-    vector<float> bestObservation;
-    vector<float> allObservations;
+    vector<float> bestObservation(3,0);
+//    vector<float> allObservations(3,0);
     vector<float> temp;
-    vector<float> thetas;
-    float relX,relY,relTheta;
+    float  mintheta;
+    int idx = 0;
+    bool nothingFoundYet = true;
+  //  float relX,relY,relTheta;
 
     for(unsigned int i=0; i<map.size();i++)
     {
         if(   (map[i].type >= typeMin)  and (map[i].type <= typeMax) )
         {
             temp = getRelativeDistance(map[i].x, map[i].y);
-            relX = temp[0];
-            relY = temp[1];
-            relTheta = temp[2];
-            allObservations.push_back(relX);
-            allObservations.push_back(relY);
-            allObservations.push_back(relTheta);
-            thetas.push_back(relTheta);
+            cout<<"\nFound type = "<<(int)map[i].type;
+            if(nothingFoundYet)
+               {
+                    nothingFoundYet = false;
+                    mintheta = temp[2];
+                    bestObservation[0] = temp[0];
+                    bestObservation[1] = temp[1];
+                    bestObservation[2] = temp[2];
+               }
+            else if ( fabs(temp[2]) < fabs(mintheta) )
+                {
+                    mintheta = temp[2];
+                    bestObservation[0] = temp[0];
+                    bestObservation[1] = temp[1];
+                    bestObservation[2] = temp[2];
+                    idx = i;
+
+                    cout<<"\nInside replacing min value\n\n";
+                }
+                cout<<"\nMin Theta = "<<mintheta;
+
         }
     }
 
+    cout<<"\n\n\n\n\n\n\n\n Found landmark type is  : == "<<(int)map[idx].type<<"\n\n\n\n\n\n\n";
 
-    vector<float>::const_iterator it;
+    //idx *= 3; // thetas.begin() - it;
 
+   cout<<"\n\n\n\nIterator Value === \t"<<mathGeneral::rad2deg(mintheta)<<"\t found at index "<<idx<<"\n\n\n\n";
 
-    it = min_element(thetas.begin(), thetas.end());
-
-    int idx = thetas.begin() - it;
-
-    bestObservation.push_back(allObservations[idx-2]);
-    bestObservation.push_back(allObservations[idx-1]);
-    bestObservation.push_back(allObservations[idx]);
 
     return bestObservation;
 

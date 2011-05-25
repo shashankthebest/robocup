@@ -62,6 +62,8 @@ int decayRate;
     /// Clear everything, in the map, retain its dimensions
 	void resetMap();
 
+	void clearObservation(unsigned int type);
+
 	void timeUpdate();
 
 	void positionUpdate(float, float,float);
