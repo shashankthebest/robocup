@@ -90,11 +90,12 @@ ActiveLocalisationProvider::ActiveLocalisationProvider(Behaviour* manager) : Beh
 
 
     m_globalMap->initializeMap();
-    m_globalMap->insertObservation(300,70,FieldObjects::FO_YELLOW_LEFT_GOALPOST, 0.99);
-    m_globalMap->insertObservation(300,-70,FieldObjects::FO_YELLOW_RIGHT_GOALPOST, 0.99);
-    m_globalMap->insertObservation(-300,70,FieldObjects::FO_BLUE_RIGHT_GOALPOST, 0.99);
-    m_globalMap->insertObservation(-300,-70,FieldObjects::FO_BLUE_LEFT_GOALPOST, 0.99);
-    m_globalMap->insertObservation(-300,0,4, 0.99);
+    m_globalMap->insertObservation(300,0,1, 0.99); // yellow goal center
+    m_globalMap->insertObservation(300,-70,2, 0.99); // yellow goal post right
+    m_globalMap->insertObservation(300,70,2, 0.99); // yellow goal post left
+    m_globalMap->insertObservation(-300,70,3, 0.99); // blue goal post left
+    m_globalMap->insertObservation(-300,-70,4, 0.99); // blue goal post right
+    m_globalMap->insertObservation(-300,0,5, 0.99);  // blue goal center
 
     m_state = m_pause;
 
