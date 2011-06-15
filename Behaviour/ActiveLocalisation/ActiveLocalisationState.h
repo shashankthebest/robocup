@@ -33,6 +33,7 @@
 #include "Infrastructure/Jobs/JobList.h"
 #include "Infrastructure/NUBlackboard.h"
 #include "Infrastructure/Jobs/VisionJobs/SaveImagesJob.h"
+#include "Tools/Math/General.h"
 
 #include "nubotconfig.h"
 #include "debug.h"
@@ -109,18 +110,21 @@ protected:
     	m_current_time = m_data->CurrentTime;
     	//m_current_position = m_field_objects->self.wmState();
         float compass = 0;
-        float dx,dy,dt, wmx,wmy,wmt;
+        float dx,dy,dt, wmx,wmy,wmt,sdx,sdy,sdt;
     	Blackboard->Sensors->getGps(m_current_position);
     	Blackboard->Sensors->getCompass(compass );
     	m_current_position[2] = compass;
-        m_parent->m_globalMap->positionUpdate(m_current_position[0],m_current_position[1],m_current_position[2]);
-    	  //cout<<"\n Current GPS           [\t"<<m_current_position[0]<<" ,\t"<<m_current_position[1]<<" ,\t"<<m_current_position[2]*180/3.14<<" ] ";
+
         wmx = Blackboard->Objects->self.wmX();
         wmy = Blackboard->Objects->self.wmY();
         wmt = Blackboard->Objects->self.Heading();
         dx = m_current_position[0] - wmx;
         dy = m_current_position[1] - wmy;
         dt = m_current_position[2] - wmt;
+        sdx = Blackboard->Objects->self.sdX();
+        sdy = Blackboard->Objects->self.sdY();
+        sdt = Blackboard->Objects->self.sdHeading();
+
         int state = 0;
         if(this == m_parent->m_localiseBall)
             state=5;
@@ -130,8 +134,15 @@ protected:
             state = 15;
         else if (this == m_parent->m_kick)
             state = 20;
+
+       // m_parent->m_globalMap->positionUpdate(m_current_position[0],m_current_position[1],m_current_position[2]);
+        m_parent->m_globalMap->positionUpdate(wmx,wmy,wmt);
+    	  //cout<<"\n Current GPS           [\t"<<m_current_position[0]<<" ,\t"<<m_current_position[1]<<" ,\t"<<m_current_position[2]*180/3.14<<" ] ";
+
+
          // cout<<"\n Localisation Belief : [\t"<<wmx<<" ,\t" <<wmy<<" ,\t"<<wmt<<" ] ";
-          cout<<"\n Error in Loc Belief : [\t"<<dx<<" ,\t" <<dy<<" ,\t"<<dt<<" ]\n";
+          cout<<"\n Ground Truth Error : [\t"<<dx<<" ,\t" <<dy<<" ,\t"<<mathGeneral::rad2deg(dt)<<" ]";
+          cout<<"\n Believed Error     : [\t"<<sdx<<" ,\t" <<sdy<<" ,\t" <<mathGeneral::rad2deg(sdt)<<" ]\n";
 
         m_parent->locAcc<<state<<", "<<m_current_position[0]<<", "<<m_current_position[1]<<", "<<m_current_position[2]
         <<", "<<wmx<<", "<<wmy<<", "<<wmt<<", "<<dx<<", "<<dy<<", "<<dt<<"\n";

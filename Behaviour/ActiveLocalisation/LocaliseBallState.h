@@ -59,7 +59,7 @@ public:
         if(reachedHalf)
             return m_parent->m_localiseSelf;
         else if (reachedBall)
-            return m_parent->m_kick;
+            return m_parent->m_lineUp;
         else
             return this;
 	};
@@ -127,7 +127,7 @@ public:
                     HeadTrackJob* head = new HeadTrackJob(m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL]);
                     m_jobs->addMotionJob(head);
                 }
-                else
+                else if ((balldistance < m_parent->fixedBallDistance) && (balldistance > 30))
                 {
                     reachedHalf = true;
                     vector<float> ballPos;
@@ -139,6 +139,13 @@ public:
                     m_parent->m_globalMap->insertObservation(ballPos[0], ballPos[1],6,0.99 ); // use ball id = 6
 
                 }
+                else if (Blackboard->Objects->self.sdHeading() > mathGeneral::deg2rad(10))
+                {
+
+                    reachedBall = true;
+
+                }
+
 
             }
 

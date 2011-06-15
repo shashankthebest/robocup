@@ -18,7 +18,7 @@
  You should have received a copy of the GNU General Public License
  along with NUbot.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+ 
 #include "targetconfig.h"
 
 
@@ -37,6 +37,7 @@
 #include "MiscBehaviours/ForwardWalkProvider.h"
 #include "RoboPedestrian/RoboPedestrianProvider.h"
 #include "ActiveLocalisation/ActiveLocalisationProvider.h"
+#include "LearnLineUp/LineUpProvider.h"
 
 #include "CameraCalibration/CameraCalibrationProvider.h"
 #include "EnvironmentalEmotions/EnvironmentalEmotionsProvider.h"
@@ -56,7 +57,7 @@ using namespace std;
 Behaviour::Behaviour()
 {
     #if defined(TARGET_IS_NAOWEBOTS)
-        m_behaviour = new ActiveLocalisationProvider(this);  //new SoccerProvider(this);
+        m_behaviour = new LineUpProvider(this);//ActiveLocalisationProvider(this);  //new SoccerProvider(this);
     #elif defined(TARGET_IS_BEAR)
         m_behaviour = new BearModeProvider(this);
     #elif defined(TARGET_IS_CYCLOID)

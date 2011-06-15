@@ -72,14 +72,19 @@ public:
                     lostBall = false;
                     start();
                     cout<<"\nReached line up state\n\n";
-                    vector<float> ballPosition;
+                    vector<float> ballPosition(3,0);
+                     cout<<"\n\n\n\nI was here\n\n\n\n";
                     ballPosition = m_parent->m_globalMap->findObservation(6); // ball id = 6
+                     cout<<"\n\n\n\n and here\n\n\n\n";
                     m_parent->m_globalMap->clearObservation(6);
                     float dist = sqrt( ballPosition[0]*ballPosition[0] +  ballPosition[1]*ballPosition[1] );
-                    float elevation = atan2(  dist , 55);
+                    float elevation = atan2(  dist,55 );
 
                     m_jobs->addMotionJob(new HeadTrackJob(elevation ,ballPosition[2],0,0));
                     m_jobs->addMotionJob(new HeadPanJob(HeadPanJob::Localisation, dist , dist , ballPosition[2] , ballPosition[2] ));
+                    HeadTrackJob* head = new HeadTrackJob(m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL]);
+                    m_jobs->addMotionJob(head);
+
 
         }
 

@@ -33,6 +33,7 @@
 #include "Infrastructure/Jobs/MotionJobs/WalkJob.h"
 #include "Infrastructure/Jobs/MotionJobs/HeadJob.h"
 #include "Infrastructure/Jobs/MotionJobs/HeadTrackJob.h"
+#include "Infrastructure/NUBlackboard.h"
 #include "Tools/Math/General.h"
 
 #include "debug.h"
@@ -84,7 +85,10 @@ public:
             cout<<"\nCalculated elevation : "<<elevation<<"\n";
             m_jobs->addMotionJob(new WalkJob(0,0,0));
             m_jobs->addMotionJob(new HeadTrackJob(elevation ,landmarkPosition[2],0,0));
-            m_jobs->addMotionJob(new HeadPanJob(HeadPanJob::Localisation, dist - 10, dist + 10, landmarkPosition[2] , landmarkPosition[2]  ));
+            float sdt = Blackboard->Objects->self.sdHeading();
+            m_jobs->addMotionJob(new HeadPanJob(HeadPanJob::Localisation, dist - 10, dist + 10,
+                                landmarkPosition[2] - sdt,
+                                landmarkPosition[2] + sdt ));
         }
 
 
