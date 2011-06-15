@@ -39,6 +39,7 @@ SET (YOUR_DIRS  Soccer
 		CameraCalibration
                 EnvironmentalEmotions
 		ActiveLocalisation
+		LearnLineUp
 )
 IF(${TARGET_ROBOT} STREQUAL BEAR)
     LIST(APPEND YOUR_DIRS BearMode)
