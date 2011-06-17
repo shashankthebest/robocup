@@ -81,7 +81,7 @@ public:
     
     /////////////////////////////////// RL Related
     GoalLineUp* mdp;          // Environment
-	Environment* env;
+	Environment* env;         // base pointer
 	
 	Approximator** cmacSet;   // CMAC approximatorSet
 	double* left ;            // State bounds
@@ -90,6 +90,7 @@ public:
     StateActionFA* safa;      // State-Action FA
     
     SarsaAgentRT* sarsa;      // SARSA Agent
+    Agent* agent;			  // Base pointer
 	
 	//////////////////////////////////////////////////
 

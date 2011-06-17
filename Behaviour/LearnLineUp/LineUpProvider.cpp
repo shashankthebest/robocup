@@ -144,8 +144,35 @@ void LineUpProvider::setupRlEngine()
 ////////////////       Defining the environment
   mdp = new GoalLineUp();
   env = mdp;
-
+///////////////   Set up function approximator
+  cmacSet = new Approximator*[Action::count];
   
+//////////// Set up state space bounds
+  left = new double[State::dimensionality];
+  right = new double[State::dimensionality];
+  env->getStateSpaceBounds(left, right);  // get bounds from environment
+  CMAC::setInputBounds(left,right);  // set bounds on tiles
+
+////////////// Get tiling architecture from file
+
+  for(int i=0; i<Action::count; i++)
+  {
+    cmacSet[i] = new CMAC("cmac.dat");
+  }
+  
+/////////////// Finalising State-Action FA
+  safa = new StateActionFA(Action::count, cmacSet);
+  char *d[] = {"schedule=constant","alpha=0.5"};
+  for(int i=0; i<Action::count; i++)
+  {
+    cmacSet[i]->setLearningParameters(2, d);
+  }  
+  
+//////////////  Setup Agent
+
+  sarsa = new SarsaAgentRT(1, as, safa, env);
+  agent = sarsa;
+  agent->setLearningParameters(2, d);
   
 }
 

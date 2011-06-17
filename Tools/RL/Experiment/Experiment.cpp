@@ -148,44 +148,50 @@ void run(MainParameters& mainP,  StateActionFA* safa, Agent* agent, bool saveFA=
 
   //start learning
 
-  for(i=1; i<= mainP.Trials; i++){
+  for(i=1; i<= mainP.Trials; i++)
+  {
     
     steps=agent->initTrial(mainP.Steps, true, false, NULL, NULL); //learning trial
 
-    if ((i%mainP.TestFrequency)==0) { //testing current policy
-      avrTR=0;
-      avrTRS=0;
-      for(k=0; k<mainP.TestSamples; k++){	
-	sampleTR=0;
-	sampleTRS=0;
-	for(j=0; j<mainP.TestStatesNumber; j++){
-	  steps=agent->initTrial(mainP.Steps, false, false, &(TestStates[j]), NULL);
-	  sampleTR+=agent->getReturn();
-	  if (steps!=0)
-	    sampleTRS+=agent->getReturn()/(double)steps;
-	}
-	sampleTR/=(double)(mainP.TestStatesNumber);
-	sampleTRS/=(double)(mainP.TestStatesNumber);
-	avrTR+=sampleTR;
-	avrTRS+=sampleTRS;
-      }
+    if ((i%mainP.TestFrequency)==0) 
+    { //testing current policy
+		avrTR=0;
+		avrTRS=0;
+		for(k=0; k<mainP.TestSamples; k++)
+		{	
+			sampleTR=0;
+			sampleTRS=0;
+			for(j=0; j<mainP.TestStatesNumber; j++)
+			{
+				steps=agent->initTrial(mainP.Steps, false, false, &(TestStates[j]), NULL);
+				sampleTR+=agent->getReturn();
+				if (steps!=0)
+					sampleTRS+=agent->getReturn()/(double)steps;
+			}
+			sampleTR/=(double)(mainP.TestStatesNumber);
+			sampleTRS/=(double)(mainP.TestStatesNumber);
+			avrTR+=sampleTR;
+			avrTRS+=sampleTRS;
+		}
 
-      avrTR/=(double)(mainP.TestSamples);
-      avrTRS/=(double)(mainP.TestSamples);
+		avrTR/=(double)(mainP.TestSamples);
+		avrTRS/=(double)(mainP.TestSamples);
       
-      safa->getMaxParameterChange(MaxParameterChanges);
-      safa->getNumberParametersChanged(NumberParametersChanged);
+		safa->getMaxParameterChange(MaxParameterChanges);
+		safa->getNumberParametersChanged(NumberParametersChanged);
 
-      ofsHistory << i << "\t" << avrTR << "\t" << avrTRS;
-      for(j=0; j<Action::count; j++){
-	ofsHistory << "\t" << MaxParameterChanges[j] << "\t" << NumberParametersChanged[j];
-      }
+		ofsHistory << i << "\t" << avrTR << "\t" << avrTRS;
+		for(j=0; j<Action::count; j++)
+		{
+			ofsHistory << "\t" << MaxParameterChanges[j] << "\t" << NumberParametersChanged[j];
+		}
 
-      ofsHistory << endl;
-      if (ofsHistory.fail()){
-	cout << "Error writing history after " << i << " learning trials" << endl;
-	exit(EXIT_FAILURE);
-      }
+		ofsHistory << endl;
+		if (ofsHistory.fail())
+		{
+			cout << "Error writing history after " << i << " learning trials" << endl;
+			exit(EXIT_FAILURE);
+		}
     } //end of testing
   }	//end of the learning loop
   

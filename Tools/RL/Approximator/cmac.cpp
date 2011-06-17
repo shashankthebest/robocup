@@ -33,7 +33,7 @@ CMAC::Tile::Tile(){
 
 
 void CMAC::Tiling::createTiles()
-  /*	Creates tiling as a collection of tiles.
+/*	Creates tiling as a collection of tiles.
 	Offsets this tiling by a random amount
 */
 {
@@ -880,7 +880,8 @@ void CMAC::setLearningParameters(int argc, char *argv[])
       return;
     }
 
-    if (strncmp("schedule=", argv[i], 9)==0){
+    if (strncmp("schedule=", argv[i], 9)==0)
+    {
 			
       if (strncmp("schedule=constant", argv[i], 17)==0)
 	ALPHA_SCHEDULE=CONSTANT;
@@ -890,11 +891,13 @@ void CMAC::setLearningParameters(int argc, char *argv[])
 	ALPHA_SCHEDULE=VISITATION;
     }
 		
-    if (strncmp("alpha=", argv[i], 6)==0){
+    if (strncmp("alpha=", argv[i], 6)==0)
+    {
       alpha=atof(&(argv[i][6]));
-      if ((alpha<=0) || (alpha>1)){
-	cout << "Error (cmac): learning step must be in (0,1]" << endl;
-	exit(EXIT_FAILURE);
+      if ((alpha<=0) || (alpha>1))
+      {
+			cout << "Error (cmac): learning step must be in (0,1]" << endl;
+			exit(EXIT_FAILURE);
       }
       alphaSet=true;
     }
@@ -903,54 +906,63 @@ void CMAC::setLearningParameters(int argc, char *argv[])
       ALPHA_DECREASE_FREQUENCY=atoi(&(argv[i][2]));
 			
 		
-    if (strncmp("ph=", argv[i], 3)==0){
+    if (strncmp("ph=", argv[i], 3)==0)
+    {
       SaveParameterHistory=atoi(&(argv[i][3]));
-      if ((SaveParameterHistory!=true)&&(SaveParameterHistory!=false)){
-	cout << "Error (cmac): invalid entry for save parameter history option" << endl;
-	exit(EXIT_FAILURE);
+      if ((SaveParameterHistory!=true)&&(SaveParameterHistory!=false))
+      {
+			cout << "Error (cmac): invalid entry for save parameter history option" << endl;
+			exit(EXIT_FAILURE);
       }
     }
 
 
     if (strncmp("d=", argv[i], 2)==0){
       ALPHA_DECREASE_FACTOR=atof(&(argv[i][2]));
-      if (ALPHA_DECREASE_FACTOR<=1){
-	cout << "Error (camc): invalid setting of alpha decrease factor" << endl;
-	exit(EXIT_FAILURE);
+      if (ALPHA_DECREASE_FACTOR<=1)
+      {
+			cout << "Error (camc): invalid setting of alpha decrease factor" << endl;
+			exit(EXIT_FAILURE);
       }
     }
 
-    if (strncmp("v=", argv[i], 2)==0){
+    if (strncmp("v=", argv[i], 2)==0)
+    {
       v=atof(&(argv[i][2]));
-      if (v<1){
-	cout << "Error (camc): invalid setting of alpha visitation factor" << endl;
-	exit(EXIT_FAILURE);
+      if (v<1)
+      {
+			cout << "Error (camc): invalid setting of alpha visitation factor" << endl;
+			exit(EXIT_FAILURE);
       }
       
 
-      for(j=0; j<T; j++)
-	tilings[j].setVisitationFactor(v);
-      
+		for(j=0; j<T; j++)
+			tilings[j].setVisitationFactor(v);
     }
 
-    if (strncmp("decay=", argv[i], 6)==0){
+    if (strncmp("decay=", argv[i], 6)==0)
+    {
       decay=atof(&(argv[i][6]));
-      if ((decay<0) || (decay>1)){
-	cout << "Error (cmac): trace decay must be in [0,1]" << endl;
-	exit(EXIT_FAILURE);
+      if ((decay<0) || (decay>1))
+      {
+			cout << "Error (cmac): trace decay must be in [0,1]" << endl;
+			exit(EXIT_FAILURE);
       }
       CMAC::Tiling::setTraceDecay(decay);
     }
   }
 
 	
-  if (alphaSet==true){
-    if (alpha==0){
+  if (alphaSet==true)
+  {
+    if (alpha==0)
+    {
       cout << "Please specify learning step from (0,1]" << endl;
       cin >> alpha;
-      if (alpha<=0) {
-	cout << "Invalid entry" << endl;
-	exit(EXIT_SUCCESS);
+      if (alpha<=0) 
+      {
+		cout << "Invalid entry" << endl;
+		exit(EXIT_SUCCESS);
       }
     }
 
