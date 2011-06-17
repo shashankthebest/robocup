@@ -85,7 +85,11 @@ public:
         }
 
 		tick();
-
+		
+		Self& self  = m_field_objects->self;
+		MobileObject& ball = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL];
+		
+		
 		if (m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].isObjectVisible())
 			{
 			   // cout<<"\n\nBall Visible, going towards it\n\n";
@@ -100,10 +104,12 @@ public:
 				float trans_speed = 1;
 				float trans_direction = ballbearing;
 				float yaw = ballbearing/2;
+				
+				
+				
 				m_jobs->addMotionJob(new HeadTrackJob(ball));
 				
-				Self& self  = m_field_objects->self;
-				MobileObject& ball = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL];
+				
 				vector<float> kickPosition(2,0);
 				vector<float> targetPosition(2,0);
 				kickPosition[0] = ball.estimatedDistance() * cos(ball.estimatedBearing());

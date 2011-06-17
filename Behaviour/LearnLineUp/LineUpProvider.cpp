@@ -25,7 +25,6 @@
 #include "LineUpSetupState.h"
 #include "LineUpEvaluateState.h"
 #include "LineUpPauseState.h"
-
 #include "LineUpWalkToBall.h"
 
 
@@ -105,8 +104,51 @@ LineUpProvider::LineUpProvider(Behaviour* manager) : BehaviourFSMProvider(manage
     landMarkId = 0;
 
     m_iteration_count = 0;
-
+	setupRlEngine();
 }
+
+void LineUpProvider::setupRlEngine()
+{
+ ///////////////////// Setting up random number generator
+  //seed randon number generator
+  
+  time_t stime;
+  time(&stime);
+  struct tm* currentTime;
+  currentTime=gmtime(&stime);
+  unsigned seed;
+  seed=(currentTime->tm_hour+1)*currentTime->tm_min*currentTime->tm_sec;
+  srand(seed);
+ 
+ /////////////////////////// Setting up states and actions
+ 
+  //state space and actions for the mountain car task
+	
+  State::dimensionality=4;
+
+  ActionSet as(6); // incTrans, decTrans, incDir, decDir, incRot, decRot
+  Action a1("incTrans", 1.0);
+  as.addAction(a1);
+  Action a2("decTrans", 2 );
+  as.addAction(a2);
+  Action a3("incDir", 3);
+  as.addAction(a3);
+  Action a4("decDir", 4);
+  as.addAction(a3);
+  Action a5("incRot", 5);
+  as.addAction(a5);
+  Action a6("decRot", 6);
+  as.addAction(a6);
+
+
+////////////////       Defining the environment
+  mdp = new GoalLineUp();
+  env = mdp;
+
+  
+  
+}
+
 
 LineUpProvider::~LineUpProvider()
 {
@@ -130,7 +172,7 @@ BehaviourState* LineUpProvider::nextStateCommons()
         m_game_info->doManualStateChange();
 
     #ifdef TARGET_IS_NAOWEBOTS
-		if (not m_optimiser and Platform->getTime() > 20*60*1e3)
+		if (not mdp and Platform->getTime() > 20*60*1e3)
 		{
 			kill(getppid(), SIGKILL);
 			kill(getpid(), SIGKILL);

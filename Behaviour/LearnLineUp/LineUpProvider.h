@@ -29,11 +29,12 @@
 #include "Tools/Optimisation/Parameter.h"
 #include "Infrastructure/map/occupancyGridMap.h"
 #include "Infrastructure/FieldObjects/FieldObjects.h"
-
+#include "Tools/RL/rlIncludes.h"
+#include "Tools/RL/Environment/GoalLineUp/GoalLineUp.h"
 
 
 class LineUpState;
-class Optimiser;
+
 
 
 #include <vector>
@@ -55,6 +56,9 @@ protected:
 private:
     void initOptimiser();
     float normalDistribution(float mean, float sigma);
+    
+    void setupRlEngine();
+    
 public:
     LineUpState* m_generate;        //!< New parameters for episode evaluation are generated
     LineUpState* m_evaluate;        //!< After execution of episode, evaluation is performed
@@ -69,15 +73,31 @@ public:
     float fixedDuration;
     float landMarkId;
     float ballCertainty;
+    float targetTheta;
+    float targetX;
+    float targetY;
     OccupancyGridMap *m_globalMap;
     ofstream locAcc;
+    
+    /////////////////////////////////// RL Related
+    GoalLineUp* mdp;          // Environment
+	Environment* env;
+	
+	Approximator** cmacSet;   // CMAC approximatorSet
+	double* left ;            // State bounds
+    double* right;			  // State bounds
+    
+    StateActionFA* safa;      // State-Action FA
+    
+    SarsaAgentRT* sarsa;      // SARSA Agent
+	
+	//////////////////////////////////////////////////
 
 private:
 
 
     string m_id;								//!< the name of RL algo
-    Optimiser* m_optimiser;                     //!< the RL algorithm
-
+   
 
 
     float calculateFitness();					//!< calculates the fitness of the current episode
