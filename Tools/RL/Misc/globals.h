@@ -44,7 +44,7 @@ struct MainParameters{
 		Trials=10000;
 		Steps=1000;
 		strFile=NULL;
-		TestFrequency=100;
+		TestFrequency=1000;
 		TestStatesNumber=50;
 		TestSamples=30;
 		TestStatesFile=NULL;
@@ -59,7 +59,8 @@ struct MainParameters{
 	int process(int argc, char* argv[]){
 		int i;
 		for (i=0; i<argc; i++){
-			if (strncmp(argv[i],"?", 1)==0){
+			if (strncmp(argv[i],"?", 1)==0)
+			{
 				cout << "Main parammeters:" << endl;
 				cout << "Trials=value : number of trials in a learning run" << endl;
 				cout << "Steps=value : maximum number of steps in a trial" << endl;
@@ -74,7 +75,8 @@ struct MainParameters{
 				return 1;
 			}
 			
-			if (strncmp("Trials=", argv[i], 7)==0){
+			if (strncmp("Trials=", argv[i], 7)==0)
+			{
 				Trials=atoi(&(argv[i][7]));
 			}
 			

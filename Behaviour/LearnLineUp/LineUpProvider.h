@@ -92,6 +92,7 @@ public:
     SarsaAgentRT* sarsa;      // SARSA Agent
     Agent* agent;			  // Base pointer
 	
+	MainParameters *mainP;     // Main Parameters
 	//////////////////////////////////////////////////
 
 private:

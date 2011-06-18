@@ -109,6 +109,13 @@ LineUpProvider::LineUpProvider(Behaviour* manager) : BehaviourFSMProvider(manage
 
 void LineUpProvider::setupRlEngine()
 {
+
+/////////////  Parameters for RL agent
+  mainP = new MainParameters();
+  char *params[] = {"Trials=10000","steps=1000","str=cmac.unx","tf=5000","tsn=1","tsf=teststates.unx","ts=1","dir=learnData.hst"};
+  mainP->process(8,params);
+	
+	
  ///////////////////// Setting up random number generator
   //seed randon number generator
   
@@ -174,6 +181,7 @@ void LineUpProvider::setupRlEngine()
   agent = sarsa;
   agent->setLearningParameters(2, d);
   
+
 }
 
 

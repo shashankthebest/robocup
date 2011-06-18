@@ -2,7 +2,7 @@
 
 
 
-void run(MainParameters& mainP,  StateActionFA* safa, Agent* agent, bool saveFA=true){
+void setUpExperiment(MainParameters& mainP,  StateActionFA* safa, Agent* agent, bool saveFA=true){
 
   /* The "run"  function implements a learning run in an RL system.
     It expects as arguments processed command line parameters stored
@@ -114,14 +114,16 @@ void run(MainParameters& mainP,  StateActionFA* safa, Agent* agent, bool saveFA=
   //test policy before learning
   avrTR=0;
   avrTRS=0;
-  for(k=0; k<mainP.TestSamples; k++){	
+  for(k=0; k<mainP.TestSamples; k++)
+  {	
     sampleTR=0;
     sampleTRS=0;
-    for(j=0; j<mainP.TestStatesNumber; j++){
+    for(j=0; j<mainP.TestStatesNumber; j++)
+    {
       steps=agent->initTrial(mainP.Steps, false, false, &(TestStates[j]), NULL);
       sampleTR+=agent->getReturn();
       if (steps!=0)
-	sampleTRS+=agent->getReturn()/(double)steps;
+		sampleTRS+=agent->getReturn()/(double)steps;
     }
     sampleTR/=(double)(mainP.TestStatesNumber);
     sampleTRS/=(double)(mainP.TestStatesNumber);
@@ -153,7 +155,7 @@ void run(MainParameters& mainP,  StateActionFA* safa, Agent* agent, bool saveFA=
     
     steps=agent->initTrial(mainP.Steps, true, false, NULL, NULL); //learning trial
 
-    if ((i%mainP.TestFrequency)==0) 
+    if ((i%mainP.TestFrequency)==0)                  // after few episodes, the agent is tested. This happnes at specified frequency
     { //testing current policy
 		avrTR=0;
 		avrTRS=0;
@@ -196,7 +198,8 @@ void run(MainParameters& mainP,  StateActionFA* safa, Agent* agent, bool saveFA=
   }	//end of the learning loop
   
 
-  if (saveFA==true) safa->saveAllArchitectureParameters(fileAP);
+  if (saveFA==true) 
+	safa->saveAllArchitectureParameters(fileAP);
     
   delete [] MaxParameterChanges;
   delete [] NumberParametersChanged;
