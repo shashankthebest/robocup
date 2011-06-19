@@ -30,6 +30,7 @@ class GoalLineUp : public Environment{
      indication of whether this state is terminal.
   */
 
+  bool checkTerminal();
 		
   void transition(const Action& action, State& s_new, double& r_new, bool& terminal);
   /*	Implements a transtion in responce to the action 

@@ -10,6 +10,19 @@
 
 
 
+
+#include "Infrastructure/Jobs/JobList.h"
+#include "Infrastructure/NUSensorsData/NUSensorsData.h"
+#include "Infrastructure/NUActionatorsData/NUActionatorsData.h"
+#include "Infrastructure/FieldObjects/FieldObjects.h"
+#include "Behaviour/BehaviourPotentials.h"
+#include "Infrastructure/NUBlackboard.h"
+#include "Infrastructure/Jobs/MotionJobs/WalkJob.h"
+#include "Infrastructure/Jobs/MotionJobs/HeadJob.h"
+#include "Infrastructure/Jobs/MotionJobs/KickJob.h"
+//#include 
+
+
 //	IMPLEMENTATION OF Environment class for mountain car task
 
 GoalLineUp::GoalLineUp()
@@ -24,39 +37,71 @@ GoalLineUp::GoalLineUp()
 
 void GoalLineUp::uniformStateSample(State& s)
 {
-  s.x[0]=-1.2+(double)rand()/((double)RAND_MAX)*1.7;	//random number in [-1.2, 0.5] - car's position
-  s.x[1]=-0.07+(double)rand()/((double)RAND_MAX)*0.14;//random number in [-0.07,0.07]- car's velocity
+  //s.x[0]=-1.2+(double)rand()/((double)RAND_MAX)*1.7;	//random number in [-1.2, 0.5] - car's position
+  //s.x[1]=-0.07+(double)rand()/((double)RAND_MAX)*0.14;//random number in [-0.07,0.07]- car's velocity
 }
 
 void GoalLineUp::startState(State& start, bool& terminal){
 			/*	Selects start state
 			*/
-	CurrentState.x[0]=-1.2+(double)rand()/((double)RAND_MAX)*1.7;	//random number in [-1.2, 0.5] - car's position
-	CurrentState.x[1]=-0.07+(double)rand()/((double)RAND_MAX)*0.14;//random number in [-0.07,0.07]- car's velocity
+	//CurrentState.x[0]=-1.2+(double)rand()/((double)RAND_MAX)*1.7;	//random number in [-1.2, 0.5] - car's position
+	//CurrentState.x[1]=-0.07+(double)rand()/((double)RAND_MAX)*0.14;//random number in [-0.07,0.07]- car's velocity
+	CurrentState.x[0] = 0;
+	CurrentState.x[1] = 0;
+	CurrentState.x[2] = 0;
+	CurrentState.x[3] = 0;
 	start=CurrentState;
-	if (CurrentState.x[0]>=0.5) terminal=true;
-	else terminal=false;
+	terminal = false;
 	Stages=1;
 }
 
 void GoalLineUp::setState(const State& s, bool& terminal){
 	CurrentState=s;
-	if ((CurrentState.x[0]<-1.2)||(CurrentState.x[0]>0.5)){
+	if ((CurrentState.x[0]<0)||(CurrentState.x[0]>50))
+	{
 		cout << "State set to invalid value" << endl;
 		cout << s << endl;
 		exit(EXIT_FAILURE);
 	}
 
-	if ((CurrentState.x[1]<-0.07)||(CurrentState.x[1]>0.07)){
+	if ((CurrentState.x[1] < -25)||(CurrentState.x[1] > 25)){
 		cout << "State set to invalid value" << endl;
 		cout << s << endl;
 		exit(EXIT_FAILURE);
 	}
-
-	if (CurrentState.x[0]>=0.5) terminal=true;
-	else terminal=false;
+	
+	terminal = checkTerminal();
 	Stages=1;
 }
+
+bool GoalLineUp::checkTerminal()
+{
+	//m_current_position = m_field_objects->self.wmState();
+	vector <float> currPos(3,0.0f);
+	float compass = 0;
+	Blackboard->Sensors->getCompass(compass );
+	currPos[2] = compass;
+	
+	MobileObject& ball = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL];
+	
+	float measureddistance = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredDistance();
+	float balldistance = measureddistance * cos(m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredElevation());
+	float ballbearing = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredBearing();
+	
+	vector<float> kickPosition(2,0);
+	vector<float> targetPosition(2,0);
+	kickPosition[0] = ball.estimatedDistance() * cos(ball.estimatedBearing());
+	kickPosition[1] = ball.estimatedDistance() * sin(ball.estimatedBearing());
+	targetPosition[0] = kickPosition[0] + 1000.0f;
+	targetPosition[1] = kickPosition[1];
+	
+	
+	if (fabs(currPos[0] - targetPosition ) 
+	
+	
+	
+}
+
 
 void GoalLineUp::transition(const Action& action, State& s_new, double& r_new, bool& terminal){
 			/*	Implements a transtion in responce to the action 

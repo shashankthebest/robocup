@@ -71,9 +71,9 @@ LineUpProvider::LineUpProvider(Behaviour* manager) : BehaviourFSMProvider(manage
  //   else
   //      m_log.open((DATA_DIR + "/Optimisation/" + m_id + "Log.log").c_str(), fstream::out | fstream::app);
 
-    m_generate     = new LineUpSetupState(this);
-   	m_localiseBall = new LineUpWalkToBallState(this);
-   	m_evaluate     = new LineUpEvaluateState(this);
+    //m_generate     = new LineUpSetupState(this);
+   	
+   	//m_evaluate     = new LineUpEvaluateState(this);
     
     m_pause        = new LineUpPauseState(this);
 
@@ -112,7 +112,7 @@ void LineUpProvider::setupRlEngine()
 
 /////////////  Parameters for RL agent
   mainP = new MainParameters();
-  char *params[] = {"Trials=10000","steps=1000","str=cmac.unx","tf=5000","tsn=1","tsf=teststates.unx","ts=1","dir=learnData.hst"};
+  char* params[] = {"Trials=10000","steps=1000","str=cmac.unx","tf=5000","tsn=1","tsf=teststates.unx","ts=1","dir=learnData.hst"};
   mainP->process(8,params);
 	
 	
@@ -133,19 +133,19 @@ void LineUpProvider::setupRlEngine()
 	
   State::dimensionality=4;
 
-  ActionSet as(6); // incTrans, decTrans, incDir, decDir, incRot, decRot
+  ActionSet actionSet(6); // incTrans, decTrans, incDir, decDir, incRot, decRot
   Action a1("incTrans", 1.0);
-  as.addAction(a1);
+  actionSet.addAction(a1);
   Action a2("decTrans", 2 );
-  as.addAction(a2);
+  actionSet.addAction(a2);
   Action a3("incDir", 3);
-  as.addAction(a3);
+  actionSet.addAction(a3);
   Action a4("decDir", 4);
-  as.addAction(a3);
+  actionSet.addAction(a3);
   Action a5("incRot", 5);
-  as.addAction(a5);
+  actionSet.addAction(a5);
   Action a6("decRot", 6);
-  as.addAction(a6);
+  actionSet.addAction(a6);
 
 
 ////////////////       Defining the environment
@@ -176,11 +176,12 @@ void LineUpProvider::setupRlEngine()
   }  
   
 //////////////  Setup Agent
-
-  sarsa = new SarsaAgentRT(1, as, safa, env);
+                          //discount factor ,  Possible actions   Approximator		Environment
+  sarsa = new SarsaAgentRT(    1,				   actionSet,			safa,			env);
   agent = sarsa;
   agent->setLearningParameters(2, d);
   
+  m_localiseBall = new LineUpWalkToBallState(this,mainP, safa, agent, true);
 
 }
 

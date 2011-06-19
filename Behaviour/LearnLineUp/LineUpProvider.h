@@ -30,7 +30,7 @@
 #include "Infrastructure/map/occupancyGridMap.h"
 #include "Infrastructure/FieldObjects/FieldObjects.h"
 #include "Tools/RL/rlIncludes.h"
-#include "Tools/RL/Environment/GoalLineUp/GoalLineUp.h"
+#include "GoalLineUp.h"
 
 
 class LineUpState;

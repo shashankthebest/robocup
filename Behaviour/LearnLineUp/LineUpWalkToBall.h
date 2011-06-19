@@ -35,23 +35,273 @@
 #include "Infrastructure/Jobs/MotionJobs/HeadJob.h"
 #include "Infrastructure/Jobs/MotionJobs/KickJob.h"
 
+#include <iostream>
+#include<time.h>
+#include<math.h>
+#include<sys/types.h>
+#include<stdlib.h>
+#include <fstream>
+#include <string.h>
+#include <stdio.h>
+
+#include "Tools/RL/Misc/globals.h"
+#include "Tools/RL/rlIncludes.h"
+
+
 #include "debug.h"
 
 class LineUpWalkToBallState : public LineUpState
 {
 private:
-bool canKick;
-bool kicked;
-bool lostBall;
+	bool canKick;
+	bool kicked;
+	bool lostBall;
+
+	// Rl related
+	
+	int i, j, k;
+	char* runID;
+	char* fileHistory;	
+	char** fileAP;
+	State* TestStates;
+	
+	
+	double avrTR; //averrage test return (over many trajectories from each test state)
+	double avrTRS; //average test return per step (over many trajectories from each test state)
+	double sampleTR; //test return (one trajectory form each test state)
+	double sampleTRS; //test return per step (one trajectory form each test state)
+	int steps;
+	double* MaxParameterChanges;
+	int* NumberParametersChanged;
+	
+	
+		
+	
+	/////////////////////////////////// RL Related
+    GoalLineUp* mdp;          // Environment
+	Environment* env;         // base pointer
+	
+	Approximator** cmacSet;   // CMAC approximatorSet
+	double* left ;            // State bounds
+    double* right;			  // State bounds
+    
+    StateActionFA* safa;      // State-Action FA
+    
+    SarsaAgentRT* sarsa;      // SARSA Agent
+    Agent* agent;			  // Base pointer
+	
+	MainParameters *mainP;     // Main Parameters
+	//////////////////////////////////////////////////
+	
+	ifstream ifile;
+	ofstream ofsHistory;
+	
+	bool saveFA;
+	
+	
+	
+	
 public:
-    LineUpWalkToBallState(LineUpProvider* parent) : LineUpState(parent)
+    LineUpWalkToBallState(LineUpProvider* parent,MainParameters *mainp,
+						StateActionFA* sa_fa, Agent* p_agent, bool savefa=true) : LineUpState(parent)
     {
-        canKick = false;
+		
+		mainP = mainp;
+		safa = sa_fa;
+		agent = p_agent;
+		saveFA = savefa;
+        
+		/////////// Kick Related Stuff
+		canKick = false;
         kicked = false;
         lostBall = false;
+		
+		i = 0;
+		
+		///////////    RL Related File handing Stuff
+
+		runID = new char[5];
+		sprintf(runID, "%d",  mainP->run);
+		
+		fileHistory = new char[100];	//name of the file for learning history data
+		strcpy(fileHistory,  mainP->dir);
+		strcat(fileHistory, "r_");
+		strcat(fileHistory, runID);
+		strcat(fileHistory ,".hst");
+		
+		fileAP  = new char*[Action::count];	//name of files for approximator settings
+		for (i=0; i<Action::count; i++){
+			fileAP[i] = new char[100];
+			strcpy(fileAP[i],  mainP->dir);
+			strcat(fileAP[i], "r_");
+			strcat(fileAP[i],runID);
+			char temp[5];
+			sprintf(temp,".a%d",i);
+			strcat(fileAP[i],temp);
+		}
+		
+		//load test states
+		char c;
+		if ( mainP->TestStatesFile==NULL){
+			cout << "No name specified for the file containing test states " << endl;
+			exit(EXIT_FAILURE);
+		}
+		ifile.open( mainP->TestStatesFile);
+		if (ifile.fail()){
+			cout << "Cannot open file to load test set" << cout;
+			exit(EXIT_FAILURE);
+		}
+		
+		 TestStates=new State[ mainP->TestStatesNumber];
+		double random;
+		
+		for (i=0; i< mainP->TestStatesNumber; i++){
+			ifile >> random;
+			if (ifile.fail())
+			{
+				cout << "Erro loading test set " << cout;
+				exit(EXIT_FAILURE);
+			}
+			
+			TestStates[i].x[0]=random;
+			ifile.get(c);
+			ifile >> random;
+			if (ifile.fail()){
+				cout << "can't open file" << cout;
+				exit(EXIT_FAILURE);
+			}
+			TestStates[i].x[1]=random;
+		}
+		
+		ifile.close();
+		
+		ofsHistory.open(fileHistory);	//file stream for saving learning history data
+		if (ofsHistory.fail()){
+			cout << "Error: can not open file to save history" << endl;
+			exit(EXIT_FAILURE);
+		}
+		
+		
+		
+		/////////////////////// Rl Main Computational variables setp
+		
+		
+		double avrTR; //averrage test return (over many trajectories from each test state)
+		double avrTRS; //average test return per step (over many trajectories from each test state)
+		double sampleTR; //test return (one trajectory form each test state)
+		double sampleTRS; //test return per step (one trajectory form each test state)
+		int steps;
+		 MaxParameterChanges = new double[Action::count];
+		 NumberParametersChanged = new int[Action::count];
+		
     };
-    virtual ~LineUpWalkToBallState() {};
-    virtual BehaviourState* nextState()
+    
+	
+	virtual ~LineUpWalkToBallState() {};
+    
+	
+	
+	void performInitialTest()
+	{
+		//test policy before learning
+		avrTR=0;
+		avrTRS=0;
+		for(k=0; k< mainP->TestSamples; k++)
+		{	
+			sampleTR=0;
+			sampleTRS=0;
+			for(j=0; j< mainP->TestStatesNumber; j++)
+			{
+				steps=agent->initTrial( mainP->Steps, false, false, &( TestStates[j]), NULL,false);
+				sampleTR+= agent->getReturn();
+				if (steps!=0)
+					sampleTRS+=  agent->getReturn()/(double)steps;
+			}
+			sampleTR/=(double)( mainP->TestStatesNumber);
+			sampleTRS/=(double)( mainP->TestStatesNumber);
+			avrTR+=sampleTR;
+			avrTRS+=sampleTRS;
+		}
+		
+		avrTR/=(double)(mainP->TestSamples);
+		avrTRS/=(double)(mainP->TestSamples);
+		
+		 safa->getMaxParameterChange(MaxParameterChanges);
+		 safa->getNumberParametersChanged(NumberParametersChanged);
+		
+		ofsHistory << 0 << "\t" << avrTR << "\t" << avrTRS;
+		for(j=0; j<Action::count; j++){
+			ofsHistory << "\t" << MaxParameterChanges[j] << "\t" << NumberParametersChanged[j];
+		}
+		
+		ofsHistory << endl;
+		if (ofsHistory.fail()){
+			cout << "Error writing history after " << i << " learning trials" << endl;
+			exit(EXIT_FAILURE);
+		}
+	}
+	
+	
+	void learnPolicy()
+	{
+		
+		if (i<= mainP->Trials)
+		{
+			i++;
+			steps =  agent->initTrial( mainP->Steps, true, false, NULL, NULL,false); //learning trial
+			
+			if ((i% mainP->TestFrequency)==0)                  // after few episodes, the agent is tested. This happnes at specified frequency
+			{ //testing current policy
+				avrTR=0;
+				avrTRS=0;
+				for(k=0; k< mainP->TestSamples; k++)
+				{	
+					sampleTR=0;
+					sampleTRS=0;
+					for(j=0; j< mainP->TestStatesNumber; j++)
+					{
+						steps=agent->initTrial(mainP->Steps, false, false, &(TestStates[j]), NULL,false);
+						sampleTR+=agent->getReturn();
+						if (steps!=0)
+							sampleTRS+=agent->getReturn()/(double)steps;
+					}
+					sampleTR/=(double)(mainP->TestStatesNumber);
+					sampleTRS/=(double)(mainP->TestStatesNumber);
+					avrTR+=sampleTR;
+					avrTRS+=sampleTRS;
+				}
+				
+				avrTR/=(double)(mainP->TestSamples);
+				avrTRS/=(double)(mainP->TestSamples);
+				
+				safa->getMaxParameterChange(MaxParameterChanges);
+				safa->getNumberParametersChanged(NumberParametersChanged);
+				
+				ofsHistory << i << "\t" << avrTR << "\t" << avrTRS;
+				for(j=0; j<Action::count; j++)
+				{
+					ofsHistory << "\t" << MaxParameterChanges[j] << "\t" << NumberParametersChanged[j];
+				}
+				
+				ofsHistory << endl;
+				if (ofsHistory.fail())
+				{
+					cout << "Error writing history after " << i << " learning trials" << endl;
+					exit(EXIT_FAILURE);
+				}
+			} //end of testing
+		}	//end of the learning loop
+		
+		
+		if (saveFA==true) 
+			safa->saveAllArchitectureParameters(fileAP);
+		
+		
+	}
+	
+	
+	
+	virtual BehaviourState* nextState()
     {
         if(lostBall)
             return m_parent->m_localiseBall;
@@ -82,6 +332,12 @@ public:
                     //m_jobs->addMotionJob(new HeadPanJob(HeadPanJob::Localisation, dist , dist , ballPosition[2] , ballPosition[2] ));
                     //HeadTrackJob* head = new HeadTrackJob(m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL]);
                     //m_jobs->addMotionJob(head);
+
+					// set all initial values, get observations from environment
+			
+					// Test policy before learning
+					performInitialTest();
+			
         }
 
 		tick();
@@ -94,28 +350,28 @@ public:
 			{
 			   // cout<<"\n\nBall Visible, going towards it\n\n";
 			   // cout<<"\nCurrentTime : "<<m_current_time<<"\n";
-				float headyaw, headpitch;
-				m_data->getPosition(NUSensorsData::HeadPitch,headpitch);
-				m_data->getPosition(NUSensorsData::HeadYaw, headyaw);
-				float measureddistance = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredDistance();
-				float balldistance = measureddistance * cos(m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredElevation());
-				float ballbearing = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredBearing();
-
-				float trans_speed = 1;
-				float trans_direction = ballbearing;
-				float yaw = ballbearing/2;
-				
-				
-				
-				m_jobs->addMotionJob(new HeadTrackJob(ball));
-				
-				
-				vector<float> kickPosition(2,0);
-				vector<float> targetPosition(2,0);
-				kickPosition[0] = ball.estimatedDistance() * cos(ball.estimatedBearing());
-				kickPosition[1] = ball.estimatedDistance() * sin(ball.estimatedBearing());
-				targetPosition[0] = kickPosition[0] + 1000.0f;
-				targetPosition[1] = kickPosition[1];
+			//	float headyaw, headpitch;
+//				m_data->getPosition(NUSensorsData::HeadPitch,headpitch);
+//				m_data->getPosition(NUSensorsData::HeadYaw, headyaw);
+//				float measureddistance = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredDistance();
+//				float balldistance = measureddistance * cos(m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredElevation());
+//				float ballbearing = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredBearing();
+//
+//				float trans_speed = 1;
+//				float trans_direction = ballbearing;
+//				float yaw = ballbearing/2;
+//				
+//				
+//				
+//				m_jobs->addMotionJob(new HeadTrackJob(ball));
+//				
+//				
+//				vector<float> kickPosition(2,0);
+//				vector<float> targetPosition(2,0);
+//				kickPosition[0] = ball.estimatedDistance() * cos(ball.estimatedBearing());
+//				kickPosition[1] = ball.estimatedDistance() * sin(ball.estimatedBearing());
+//				targetPosition[0] = kickPosition[0] + 1000.0f;
+//				targetPosition[1] = kickPosition[1];
 				
 				// collect all info, and keep ready for rl algo
 				

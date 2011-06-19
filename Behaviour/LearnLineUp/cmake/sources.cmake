@@ -23,7 +23,7 @@ ENDIF()
 SET (YOUR_SRCS  LineUpProvider.cpp LineUpProvider.h
 		LineUpState.h LineUpSetupState.h
 		LineUpEvaluateState.h LineUpPauseState.h
-		LineUpWalkToBall.h 
+		LineUpWalkToBall.h GoalLineUp.cpp GoalLineUp.h
 
 		
 )
