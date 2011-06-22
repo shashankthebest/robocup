@@ -74,8 +74,11 @@ void StateActionFA::predict(const Action& a, const State& s,  double& output)
 				output : returned value of the predicted output
 		*/
 {
-  if (fa[a.id]==NULL){
-    cout << "Error (safa): attempt to use non-existent Approximator object" << endl;
+	
+	cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";
+  if (fa[a.id]==NULL)
+  {
+    cout << "\n\nError (safa): attempt to use non-existent Approximator object" << endl;
     exit(EXIT_FAILURE);
   }
   fa[a.id]->predict(s, output); 

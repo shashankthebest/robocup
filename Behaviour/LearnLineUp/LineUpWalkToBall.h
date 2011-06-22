@@ -139,7 +139,7 @@ public:
 			char temp[5];
 			sprintf(temp,".a%d",i);
 			strcat(fileAP[i],temp);
-			cout<<"\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<"  ";
+			
 		}
 		
 		//load test states
@@ -161,7 +161,7 @@ public:
 		
 		for (i=0; i< mainP->TestStatesNumber; i++)
 		{
-			cout<<"\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<"  ";
+			
 			ifile >> random;
 			if (ifile.fail())
 			{
@@ -181,7 +181,7 @@ public:
 		
 		ifile.close();
 		
-		cout<<"\n\nFile NAme : "<<fileHistory<<"\n\n";
+		//cout<<"\n\nFile NAme : "<<fileHistory<<"\n\n";
 		
 		ofsHistory.open(fileHistory);	//file stream for saving learning history data
 		if (ofsHistory.fail()){
@@ -222,7 +222,9 @@ public:
 			sampleTRS=0;
 			for(j=0; j< mainP->TestStatesNumber; j++)
 			{
+				
 				steps=agent->initTrial( mainP->Steps, false, false, &( TestStates[j]), NULL,false);
+				
 				sampleTR+= agent->getReturn();
 				if (steps!=0)
 					sampleTRS+=  agent->getReturn()/(double)steps;
@@ -346,7 +348,8 @@ public:
 					// set all initial values, get observations from environment
 			
 					// Test policy before learning
-					performInitialTest();
+					//performInitialTest();
+					cout<<"\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<"  \n\n";
 			
         }
 

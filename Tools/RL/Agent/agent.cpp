@@ -7,7 +7,7 @@
 
 
 Agent::Agent(double g, const ActionSet& a_s, StateActionFA* const f, Environment* const e)
-  : actions(a_s), fa(f), env(e), gamma(g), trajectory(NULL)
+  : actions(a_s), fa(f), env(e), gamma(g), trajectory(NULL), CurrentAction(), CurrentState()
 {
   ApplicableActions = new int[Action::count];
   terminal=false;
@@ -27,16 +27,20 @@ int Agent::initTrial(int N, bool learning, bool SaveTrajectory, const State* s =
 	
 	if (s==NULL)
 		env->startState(CurrentState, terminal);
-	
 	else{
 		CurrentState=*s;
 		env->setState(*s, terminal);
+	
 	}
 	
 	if (learning==true)
+	{
 		steps = actAndLearn(N, SaveTrajectory);
+	}
 	else
+	{
 		steps=act(N, SaveTrajectory, ComputeBellmanError);
+	}
 	
 	
 	//IMPLEMENT HERE SAVING TRAJECTORY TO A FILE

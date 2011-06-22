@@ -622,7 +622,9 @@ void CMAC::predict(const State& s, double& output)
  double w;
 
  output=0;
- for(i=0; i<T; i++){
+ for(i=0; i<T; i++)
+ {
+	 cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";
    tilings[i].getActiveParameter(s, w, ind);
    output=output+w;
  }

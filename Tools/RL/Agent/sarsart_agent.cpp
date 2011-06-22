@@ -67,7 +67,8 @@ void SarsaAgentRT::setLearningParameters(int argc, char *argv[])
 				
 int SarsaAgentRT::actAndLearn(int N, bool SaveTrajectory)
   
-{		
+{
+	
   State NewState;
   Action NewAction;
   double Qvalue, Qcheck;
@@ -76,11 +77,13 @@ int SarsaAgentRT::actAndLearn(int N, bool SaveTrajectory)
   int steps=0;
   int j;
   double TDerror;
+  
   double* Qv = new double[actions.size];
-		
+cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";				
   chooseAction(CurrentState, CurrentAction);
-	
-  while (i<N-1 && terminal==false){
+cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";					
+  while (i<N-1 && terminal==false)
+  {
 		cout<<"\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<"  ";
     fa->decayTraces(lambda*gamma);
     fa->clearTraces(CurrentAction, CurrentState, 0);
@@ -198,26 +201,32 @@ void SarsaAgentRT::chooseAction(const State& s, Action& a)
   int NumberAA=0;		//number of applicable actions
   int i;
   int id;	//selected action id
-	
+	cout<<"\n\nTotal Actions  : "<<actions.size;
   for (i=0;i<actions.size;i++)
     if (env->applicable(s,actions.action[i])==true)
-      {	ApplicableActions[NumberAA]=i;
-      NumberAA++;
+      {
+		  
+		  	ApplicableActions[NumberAA]=i;
+			NumberAA++;
+			
       }
 
   if (NumberAA==0) 
-    {	cout << "No action can be taken in the current state " << endl;
-    exit(EXIT_FAILURE);
+    {	
+		cout << "\n\nNo action can be taken in the current state " << endl<<endl;
+		exit(EXIT_FAILURE);
     }
 
   if ((double)rand()/(double)RAND_MAX <= epsilon) 
     //take any action uniformenly
     {	
+		
       id=ApplicableActions[rand()%NumberAA];
       a=actions.action[id];
     }
   else //select greedy ection
     {	
+		
       double* Values, BestValue;
       Action b;
       int NumberGreedyActions, gr;
@@ -226,25 +235,34 @@ void SarsaAgentRT::chooseAction(const State& s, Action& a)
       Values = new double[NumberAA];
       GreedyActions = new int[NumberAA];
 
-      for (i=0; i<NumberAA; i++){
-	id=ApplicableActions[i];
-	a=actions.action[id];
-	fa->predict(a, s, Values[i]);
+      for (i=0; i<NumberAA; i++)
+      {
+		cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";
+		id = ApplicableActions[i];
+		cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";
+		a  = actions.action[id];
+		cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";
+		fa->predict(a, s, Values[i]);
+		cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";
       }
-      BestValue=Values[0];
-      NumberGreedyActions=1;
-      GreedyActions[0]=ApplicableActions[0];
+      
+      BestValue = Values[0];
+      NumberGreedyActions = 1;
+      GreedyActions[0] = ApplicableActions[0];
 
-      for (i=1; i<NumberAA; i++){
-	if (Values[i]>BestValue){
-	  BestValue=Values[i];
-	  NumberGreedyActions=1;
-	  GreedyActions[0]=ApplicableActions[i];
-	}
-	if (Values[i]==BestValue){
-	  NumberGreedyActions++;
-	  GreedyActions[NumberGreedyActions-1]=ApplicableActions[i];
-	}
+      for (i=1; i<NumberAA; i++)
+      {
+		if (Values[i]>BestValue)
+		{
+			BestValue=Values[i];
+			NumberGreedyActions=1;
+			GreedyActions[0]=ApplicableActions[i];
+		}
+		if (Values[i]==BestValue)
+		{
+			NumberGreedyActions++;
+			GreedyActions[NumberGreedyActions-1]=ApplicableActions[i];
+		}
       }
 		
       gr=rand()%NumberGreedyActions;
