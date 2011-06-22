@@ -34,7 +34,7 @@ int Agent::initTrial(int N, bool learning, bool SaveTrajectory, const State* s =
 	}
 	
 	if (learning==true)
-		steps=actAndLearn(N, SaveTrajectory);
+		steps = actAndLearn(N, SaveTrajectory);
 	else
 		steps=act(N, SaveTrajectory, ComputeBellmanError);
 	

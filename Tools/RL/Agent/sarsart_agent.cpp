@@ -46,7 +46,7 @@ void SarsaAgentRT::setLearningParameters(int argc, char *argv[])
 	cout << "Error (agent): lambda must be in [0,1]" << endl;
 	exit(EXIT_FAILURE);
       }
-			
+			 
       decimal=sprintf(decay[0],"decay=%f", lambda*gamma);
       fa->setAllLearningParameters(1, decay);
     }
@@ -81,31 +81,39 @@ int SarsaAgentRT::actAndLearn(int N, bool SaveTrajectory)
   chooseAction(CurrentState, CurrentAction);
 	
   while (i<N-1 && terminal==false){
-		
+		cout<<"\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<"  ";
     fa->decayTraces(lambda*gamma);
     fa->clearTraces(CurrentAction, CurrentState, 0);
     fa->replaceTraces(CurrentAction, CurrentState, 1.0);
-    if (SaveTrajectory==true){
+    if (SaveTrajectory==true)
+    {
       for (j=0; j<actions.size; j++)
-	fa->predict(actions.action[j],CurrentState,Qv[j]);
+		fa->predict(actions.action[j],CurrentState,Qv[j]);        //// Predict value                                S
     }
-    env->transition(CurrentAction, NewState, CurrentReward, terminal);
+    env->transition(CurrentAction, NewState, CurrentReward, terminal);  //// Transit to next state                  A,R
     steps++;
-    chooseAction(NewState, NewAction);
-    fa->predict(NewAction, NewState, Qvalue);
-    if (SaveTrajectory==true){
+    
+    chooseAction(NewState, NewAction);         ////  With new state, select an action                               S
+    
+    fa->predict(NewAction, NewState, Qvalue);  //// New reward                                                      A (SARSA)
+    
+    if (SaveTrajectory==true)
+    {
       fa->predict(CurrentAction, CurrentState, Qcheck);
-      TDerror=Qcheck - (CurrentReward+gamma*Qvalue);
+      TDerror = Qcheck - (CurrentReward+gamma*Qvalue);
     }
+    
     //cout << "cs:" << CurrentState << " ca:" << CurrentAction.id << " ns:" << NewState << " cr=" << CurrentReward << " td=" << TDerror << endl;
     fa->learn(CurrentAction, CurrentState, CurrentReward+gamma*Qvalue);
 
-    if (SaveTrajectory==true){
+    if (SaveTrajectory==true)
+    {
       trajectory->stage[i].state=CurrentState;
       trajectory->stage[i].action=CurrentAction;
       trajectory->stage[i].reward=CurrentReward;
-      for (j=0; j<actions.size; j++){
-	trajectory->stage[i].Qvalue[j]=Qv[j];
+      for (j=0; j<actions.size; j++)
+      {
+		trajectory->stage[i].Qvalue[j]=Qv[j];
       }
       trajectory->stage[i].TDerror=TDerror;
       trajectory->length=i+1;
@@ -118,7 +126,9 @@ int SarsaAgentRT::actAndLearn(int N, bool SaveTrajectory)
     discount=discount*gamma;
     i++;
   }
-  if (SaveTrajectory==true){
+  
+  if (SaveTrajectory==true)
+  {
     trajectory->stage[i].state=CurrentState;	//trajectory ends with state
     trajectory->length=i+1;
   }

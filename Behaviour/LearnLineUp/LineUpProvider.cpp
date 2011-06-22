@@ -105,6 +105,7 @@ LineUpProvider::LineUpProvider(Behaviour* manager) : BehaviourFSMProvider(manage
 
     m_iteration_count = 0;
 	setupRlEngine();
+	
 }
 
 void LineUpProvider::setupRlEngine()
@@ -112,9 +113,9 @@ void LineUpProvider::setupRlEngine()
 
 /////////////  Parameters for RL agent
   mainP = new MainParameters();
-  char* params[] = {"Trials=10000","steps=1000","str=cmac.unx","tf=5000","tsn=1","tsf=teststates.unx","ts=1","dir=learnData.hst"};
+  char* params[] = {"Trials=10000","steps=1000","str=cmac.unx","tf=5000","tsn=1","tsf=teststates.unx","ts=1","dir=learnData"};
   mainP->process(8,params);
-	
+
 	
  ///////////////////// Setting up random number generator
   //seed randon number generator
@@ -131,7 +132,7 @@ void LineUpProvider::setupRlEngine()
  
   //state space and actions for the mountain car task
 	
-  State::dimensionality=4;
+  State::dimensionality=3;
 
   ActionSet actionSet(6); // incTrans, decTrans, incDir, decDir, incRot, decRot
   Action a1("incTrans", 1.0);
@@ -148,17 +149,23 @@ void LineUpProvider::setupRlEngine()
   actionSet.addAction(a6);
 
 
+
 ////////////////       Defining the environment
   mdp = new GoalLineUp();
   env = mdp;
+  
+  
+
 ///////////////   Set up function approximator
   cmacSet = new Approximator*[Action::count];
   
+
 //////////// Set up state space bounds
   left = new double[State::dimensionality];
   right = new double[State::dimensionality];
   env->getStateSpaceBounds(left, right);  // get bounds from environment
   CMAC::setInputBounds(left,right);  // set bounds on tiles
+
 
 ////////////// Get tiling architecture from file
 
@@ -167,6 +174,7 @@ void LineUpProvider::setupRlEngine()
     cmacSet[i] = new CMAC("cmac.dat");
   }
   
+
 /////////////// Finalising State-Action FA
   safa = new StateActionFA(Action::count, cmacSet);
   char *d[] = {"schedule=constant","alpha=0.5"};
@@ -175,6 +183,7 @@ void LineUpProvider::setupRlEngine()
     cmacSet[i]->setLearningParameters(2, d);
   }  
   
+
 //////////////  Setup Agent
                           //discount factor ,  Possible actions   Approximator		Environment
   sarsa = new SarsaAgentRT(    1,				   actionSet,			safa,			env);
@@ -221,14 +230,14 @@ BehaviourState* LineUpProvider::nextStateCommons()
 
 		if (m_state == m_pause and Platform->getTime() > 50)
 			{
-			    cout<<"\nreturned generate\n";
-			    return m_generate;
+			    cout<<"\nStarted Learning\n";
+			    return m_localiseBall;
 			}
 		else
 			return m_state;
 	#else
         if (m_state == m_paused and Platform->getTime() > 5000)
-            return m_generate;
+            return m_localiseBall;
         else
             return m_state;
     #endif

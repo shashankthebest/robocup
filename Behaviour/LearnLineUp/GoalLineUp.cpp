@@ -8,7 +8,7 @@
 
 #include "GoalLineUp.h"
 
-
+#define TARGET_THETA 0
 
 
 #include "Infrastructure/Jobs/JobList.h"
@@ -20,17 +20,31 @@
 #include "Infrastructure/Jobs/MotionJobs/WalkJob.h"
 #include "Infrastructure/Jobs/MotionJobs/HeadJob.h"
 #include "Infrastructure/Jobs/MotionJobs/KickJob.h"
+
+#include "Tools/Math/General.h"
+#include "Infrastructure/Jobs/JobList.h"
+#include "Infrastructure/NUSensorsData/NUSensorsData.h"
+#include "Infrastructure/NUActionatorsData/NUActionatorsData.h"
+#include "Infrastructure/FieldObjects/FieldObjects.h"
+#include "Behaviour/BehaviourPotentials.h"
+
+#include "Infrastructure/Jobs/MotionJobs/WalkJob.h"
+#include "Infrastructure/Jobs/MotionJobs/HeadJob.h"
+#include "Infrastructure/Jobs/MotionJobs/KickJob.h"
+
+
 //#include 
 
 
 //	IMPLEMENTATION OF Environment class for mountain car task
 
-GoalLineUp::GoalLineUp()
+GoalLineUp::GoalLineUp():Environment()
 {
 			/*	Default constructor.
 				Initializes state according to start state distribution
 			*/
 		bool t;
+		CurrentState.x = new double[3];
 		startState(CurrentState, t);
 		reward=-1;
 }
@@ -49,7 +63,7 @@ void GoalLineUp::startState(State& start, bool& terminal){
 	CurrentState.x[0] = 0;
 	CurrentState.x[1] = 0;
 	CurrentState.x[2] = 0;
-	CurrentState.x[3] = 0;
+	//CurrentState.x[3] = 0;
 	start=CurrentState;
 	terminal = false;
 	Stages=1;
@@ -82,11 +96,13 @@ bool GoalLineUp::checkTerminal()
 	Blackboard->Sensors->getCompass(compass );
 	currPos[2] = compass;
 	
-	MobileObject& ball = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL];
+	bool retVal = false;
 	
-	float measureddistance = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredDistance();
-	float balldistance = measureddistance * cos(m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredElevation());
-	float ballbearing = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredBearing();
+	MobileObject& ball = Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL];
+	
+	float measureddistance = Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredDistance();
+	float balldistance = measureddistance * cos(Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredElevation());
+	float ballbearing = Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredBearing();
 	
 	vector<float> kickPosition(2,0);
 	vector<float> targetPosition(2,0);
@@ -95,8 +111,16 @@ bool GoalLineUp::checkTerminal()
 	targetPosition[0] = kickPosition[0] + 1000.0f;
 	targetPosition[1] = kickPosition[1];
 	
+	vector<float>currVel(3,0.0f);
+	Blackboard->Sensors->get(NUSensorsData::MotionWalkSpeed,currVel);
+	float mixedSpeed = currVel[0]*currVel[1];
 	
-	if (fabs(currPos[0] - targetPosition ) 
+	
+	if ((fabs(currPos[0] - targetPosition[0]) <=20 )  &&  fabs(currPos[2] -TARGET_THETA) <= 0.034  
+	     && mixedSpeed<0.5 && currVel[2]<0.02)
+	{
+		retVal = true;
+	}
 	
 	
 	
@@ -126,6 +150,48 @@ void GoalLineUp::transition(const Action& action, State& s_new, double& r_new, b
 			
 			exit(EXIT_FAILURE);
 		}
+		
+	
+		
+		if (action.value == 1 ) // Increase Translation velocity
+		{
+			if (CurrentState.x[0] <1)
+				CurrentState.x[0] += 0.1;
+				
+		}
+		else if (action.value == 2)  // Decrease Translation velocity
+		{
+			if (CurrentState.x[0] >0)
+				CurrentState.x[0] -= 0.1;			
+		}
+		else if (action.value == 3)  // Increase Angle
+		{
+			if (CurrentState.x[1] < mathGeneral::deg2rad(180))
+				CurrentState.x[1] += mathGeneral::deg2rad(2);						
+		}
+		else if (action.value == 4)  // Decrease Angle
+		{
+			if (CurrentState.x[1] > mathGeneral::deg2rad(-180))
+				CurrentState.x[1] -= mathGeneral::deg2rad(2);									
+		}
+		else if (action.value == 5)	 // Increase Rotational Velocity
+		{
+			if (CurrentState.x[2] < mathGeneral::deg2rad(180))
+				CurrentState.x[2] += mathGeneral::deg2rad(2);				
+		}
+		else if (action.value == 6)	 // Decrease Rotational Velocity
+		{
+			if (CurrentState.x[2] > mathGeneral::deg2rad(-180))
+				CurrentState.x[2] -= mathGeneral::deg2rad(2);				
+		}
+		
+		
+		
+		
+		
+		
+		
+		
 		//calculate new velocity
 		temp=s_last.x[1]+0.001*action.value-0.0025*cos(3*s_last.x[0]);
 		if (temp<-0.07) 
@@ -179,14 +245,21 @@ void GoalLineUp::bound(int i, bool& bounded, double& left, double& right)
 	}
 	
 	bounded=true;
-	if (i==0) {	
-		left = -1.2;
-		right= 0.5;
+	if (i==0) 
+	{	
+		left = 0;
+		right= 50;
 		return;
 	}
-	if (i==1){
-		left = -0.07;
-		right = 0.07;
+	if (i==1)
+	{
+		left = -180;
+		right = 180;
+	}
+	if (i==2)
+	{
+		left = 0;
+		right = 1;
 	}
 		
 }

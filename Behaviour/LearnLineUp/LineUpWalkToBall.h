@@ -130,7 +130,8 @@ public:
 		strcat(fileHistory ,".hst");
 		
 		fileAP  = new char*[Action::count];	//name of files for approximator settings
-		for (i=0; i<Action::count; i++){
+		for (i=0; i<Action::count; i++)
+		{
 			fileAP[i] = new char[100];
 			strcpy(fileAP[i],  mainP->dir);
 			strcat(fileAP[i], "r_");
@@ -138,24 +139,29 @@ public:
 			char temp[5];
 			sprintf(temp,".a%d",i);
 			strcat(fileAP[i],temp);
+			cout<<"\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<"  ";
 		}
 		
 		//load test states
 		char c;
-		if ( mainP->TestStatesFile==NULL){
-			cout << "No name specified for the file containing test states " << endl;
+		if ( mainP->TestStatesFile==NULL)
+		{
+			cout << "No name specified for the file containing test states \n\n" << endl;
 			exit(EXIT_FAILURE);
 		}
 		ifile.open( mainP->TestStatesFile);
-		if (ifile.fail()){
-			cout << "Cannot open file to load test set" << cout;
+		if (ifile.fail())
+		{
+			cout << "Cannot open file to load test set\n\n" << cout;
 			exit(EXIT_FAILURE);
 		}
 		
 		 TestStates=new State[ mainP->TestStatesNumber];
 		double random;
 		
-		for (i=0; i< mainP->TestStatesNumber; i++){
+		for (i=0; i< mainP->TestStatesNumber; i++)
+		{
+			cout<<"\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<"  ";
 			ifile >> random;
 			if (ifile.fail())
 			{
@@ -167,7 +173,7 @@ public:
 			ifile.get(c);
 			ifile >> random;
 			if (ifile.fail()){
-				cout << "can't open file" << cout;
+				cout << "can't open file\n\n" << cout;
 				exit(EXIT_FAILURE);
 			}
 			TestStates[i].x[1]=random;
@@ -175,9 +181,11 @@ public:
 		
 		ifile.close();
 		
+		cout<<"\n\nFile NAme : "<<fileHistory<<"\n\n";
+		
 		ofsHistory.open(fileHistory);	//file stream for saving learning history data
 		if (ofsHistory.fail()){
-			cout << "Error: can not open file to save history" << endl;
+			cout << "Error: can not open file to save history\n\n" << endl;
 			exit(EXIT_FAILURE);
 		}
 		
@@ -193,6 +201,8 @@ public:
 		int steps;
 		 MaxParameterChanges = new double[Action::count];
 		 NumberParametersChanged = new int[Action::count];
+		 
+		 cout<<"\nFinished setting up files for RL engine";
 		
     };
     
@@ -247,8 +257,8 @@ public:
 		
 		if (i<= mainP->Trials)
 		{
-			i++;
-			steps =  agent->initTrial( mainP->Steps, true, false, NULL, NULL,false); //learning trial
+			i++;                   // Steps in trial, LearnOrNot,  SaveTrajectory?, startingState, fileName4Trajectory, BellmanError? 
+			steps =  agent->initTrial( mainP->Steps,       true,       false,          NULL,          "trajectory.dat", false); //learning trial
 			
 			if ((i% mainP->TestFrequency)==0)                  // after few episodes, the agent is tested. This happnes at specified frequency
 			{ //testing current policy
@@ -350,20 +360,20 @@ public:
 			{
 			   // cout<<"\n\nBall Visible, going towards it\n\n";
 			   // cout<<"\nCurrentTime : "<<m_current_time<<"\n";
-			//	float headyaw, headpitch;
-//				m_data->getPosition(NUSensorsData::HeadPitch,headpitch);
-//				m_data->getPosition(NUSensorsData::HeadYaw, headyaw);
-//				float measureddistance = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredDistance();
-//				float balldistance = measureddistance * cos(m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredElevation());
-//				float ballbearing = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredBearing();
-//
-//				float trans_speed = 1;
-//				float trans_direction = ballbearing;
-//				float yaw = ballbearing/2;
-//				
-//				
-//				
-//				m_jobs->addMotionJob(new HeadTrackJob(ball));
+				float headyaw, headpitch;
+				m_data->getPosition(NUSensorsData::HeadPitch,headpitch);
+				m_data->getPosition(NUSensorsData::HeadYaw, headyaw);
+				float measureddistance = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredDistance();
+				float balldistance = measureddistance * cos(m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredElevation());
+				float ballbearing = m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredBearing();
+
+				float trans_speed = 1;
+				float trans_direction = ballbearing;
+				float yaw = ballbearing/2;
+				
+				
+				
+				m_jobs->addMotionJob(new HeadTrackJob(ball));
 //				
 //				
 //				vector<float> kickPosition(2,0);
@@ -374,6 +384,8 @@ public:
 //				targetPosition[1] = kickPosition[1];
 				
 				// collect all info, and keep ready for rl algo
+				
+				learnPolicy();
 				
 			}
 			else  if (ball.TimeSinceLastSeen() > 250)
