@@ -196,7 +196,8 @@ void CMAC::Tiling::getActiveParameter(const State& s, double& weight, int& index
 
 
   index=0;
-  for(i=0; i<State::dimensionality; i++){
+  for(i=0; i<State::dimensionality; i++)
+  {
     ind=(int)(float)((s.x[i]-origin[i])/h[i]);
     
 
@@ -205,7 +206,8 @@ void CMAC::Tiling::getActiveParameter(const State& s, double& weight, int& index
 		
 
 
-  if ((index<0) || (index>=N)) {
+  if ((index<0) || (index>=N)) 
+  {
     cout << "Error (tiling): tile index out of limits" << endl;
     cout << "state: " << s << " index=" << index << " N=" << N << endl;
     index=0;
@@ -624,7 +626,7 @@ void CMAC::predict(const State& s, double& output)
  output=0;
  for(i=0; i<T; i++)
  {
-	 cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";
+	 
    tilings[i].getActiveParameter(s, w, ind);
    output=output+w;
  }

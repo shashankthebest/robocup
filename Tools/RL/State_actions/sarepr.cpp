@@ -234,9 +234,12 @@ void ActionSet::addAction(Action& a){
 		added++;
 }
 
-void ActionSet::operator = (const ActionSet& as){
+void ActionSet::operator = (const ActionSet& as)
+{
+	cout<<"\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<"  ";
 	size=as.size;
-	added=as.added;
+	added = as.added;
+	if(action!=NULL)
 	delete [] action;
 	action = new Action[size];
 	int i;
@@ -244,7 +247,32 @@ void ActionSet::operator = (const ActionSet& as){
 		action[i] = as.action[i];
 }
 
-ActionSet::~ActionSet(){
+void ActionSet::printActions()
+{
+	cout<<"\n\n";
+	for (int i=0; i<size; i++)
+	{
+		cout<<"\t "<<action[i].value<<", ";
+	}
+}
+
+
+ActionSet::ActionSet(const ActionSet& as)
+{
+	
+	size = as.size;
+	added = as.added;
+	if(!action)
+	 delete [] action;
+	cout<<"\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<"  ";
+	action = new Action[size];
+	int i;
+	for (i=0; i<size; i++)
+		action[i] = as.action[i];
+}
+
+ActionSet::~ActionSet()
+{
 	delete [] action;
 }
 

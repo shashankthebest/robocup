@@ -223,9 +223,12 @@ void GoalLineUp::transition(const Action& action, State& s_new, double& r_new, b
 bool GoalLineUp::applicable(const State& s, const Action& a)
 		/*	Checks if action a is applicable in state s.
 		*/
-	{if ((a.value==-1.0) || (a.value==0.0) || (a.value == 1.0) )
-		return true;
-	else return false;
+{
+		int aVal = (int)a.value;
+		if ((aVal==0 ) || (aVal==1 ) || (aVal==2 ) || (aVal==3 )  || (aVal==4 ) || (aVal==5 )  )
+			return true;
+		else 
+			return false;
 }
 
 void GoalLineUp::bound(int i, bool& bounded, double& left, double& right)

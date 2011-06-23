@@ -58,6 +58,8 @@ struct ActionSet{//implementation in sarepr.cpp
 	
 	ActionSet();
 	
+	ActionSet(const ActionSet& as);
+	
 	ActionSet(int n);
 	/* General constructor.
      n : size of the action set
@@ -69,6 +71,8 @@ struct ActionSet{//implementation in sarepr.cpp
 	/* Add action to the action set.
      a : action to be added.
 	 */
+	 
+	 void printActions();
 	
 	void operator = (const ActionSet& a);
 	

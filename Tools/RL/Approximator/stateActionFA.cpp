@@ -32,7 +32,8 @@ StateActionFA::	~StateActionFA(){
 
 int StateActionFA::getSize(){
   int i;
-  for (i=0;i<A;i++){
+  for (i=0;i<A;i++)
+  {
     if (fa[i]!=NULL) return fa[i]->getSize();
   }
   return 0;

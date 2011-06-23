@@ -8,7 +8,8 @@ class Agent { //implementation of some non-virtual functions in agent.cpp
 	
 public:
 	
-	Agent(double g, const ActionSet& a_s, StateActionFA* const f, Environment* const e);
+	//Agent(double g, const ActionSet& a_s, StateActionFA* const f, Environment* const e);
+	Agent(double g, ActionSet a_s, StateActionFA* const f, Environment* const e);
 	/* Constructor.
      g : discount factor
      a_s : action set available to the agent
@@ -75,7 +76,7 @@ protected:
 	Action CurrentAction;//action chosen in the current state
 	bool terminal; //indicates if the state is terminal
 	double CurrentReward;
-	const ActionSet& actions; //action set of the RL system
+	ActionSet actions; //const ActionSet& actions; //action set of the RL system
 	StateActionFA* const fa; /* Pointer to an arcitecture representing
 							  either policy probability distribution
 							  or action-value functions.

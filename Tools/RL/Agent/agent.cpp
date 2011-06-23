@@ -6,10 +6,17 @@
 #include "agent.h"
 
 
-Agent::Agent(double g, const ActionSet& a_s, StateActionFA* const f, Environment* const e)
+//Agent::Agent(double g, const ActionSet& a_s, StateActionFA* const f, Environment* const e)
+//  : actions(a_s), fa(f), env(e), gamma(g), trajectory(NULL), CurrentAction(), CurrentState()
+Agent::Agent(double g,  ActionSet a_s, StateActionFA* const f, Environment* const e)
   : actions(a_s), fa(f), env(e), gamma(g), trajectory(NULL), CurrentAction(), CurrentState()
 {
   ApplicableActions = new int[Action::count];
+  cout<<"\n\nAction count seen = "<<Action::count<<"\n\n";
+  cout<<"\n\nTotal actions in base = "<<actions.size<<"\n\n";
+  
+  cout<<"\nAction Size  : "<<__FILE__<<"   at "<<__LINE__<<"  is "<<actions.size;
+  
   terminal=false;
   BellmanError=-1.0;
 }
@@ -18,6 +25,7 @@ Agent::Agent(double g, const ActionSet& a_s, StateActionFA* const f, Environment
 
 int Agent::initTrial(int N, bool learning, bool SaveTrajectory, const State* s = NULL, char* fileName = NULL, bool ComputeBellmanError = false) 
 {	
+	
 	int i, j;
 	int steps=0;
 	

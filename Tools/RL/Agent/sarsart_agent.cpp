@@ -11,10 +11,12 @@
 //Implementation of the SarsaAgent class derived from Agent base class
 
 
-SarsaAgentRT::SarsaAgentRT(double g, const ActionSet& a_s,  StateActionFA* const f,  Environment* const e )
+//SarsaAgentRT::SarsaAgentRT(double g, const ActionSet& a_s,  StateActionFA* const f,  Environment* const e )
+SarsaAgentRT::SarsaAgentRT(double g, ActionSet a_s,  StateActionFA* const f,  Environment* const e )
   //initialization list
   : Agent(g, a_s, f, e)
 {	
+	cout<<"\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<"  ";
   lambda=0;
   epsilon=0;
 }
@@ -40,11 +42,13 @@ void SarsaAgentRT::setLearningParameters(int argc, char *argv[])
       return;
     }
 
-    if (strncmp("lambda=", argv[i], 7)==0){
+    if (strncmp("lambda=", argv[i], 7)==0)
+    {
       lambda=atof(&(argv[i][7]));
-      if ((lambda<0) || (lambda>1)){
-	cout << "Error (agent): lambda must be in [0,1]" << endl;
-	exit(EXIT_FAILURE);
+      if ((lambda<0) || (lambda>1))
+      {
+		cout << "Error (agent): lambda must be in [0,1]" << endl;
+		exit(EXIT_FAILURE);
       }
 			 
       decimal=sprintf(decay[0],"decay=%f", lambda*gamma);
@@ -53,16 +57,19 @@ void SarsaAgentRT::setLearningParameters(int argc, char *argv[])
     if (strncmp("alpha=", argv[i], 6)==0)
       fa->setAllLearningParameters(1,&(argv[i]));
 		
-    if (strncmp("epsilon=", argv[i], 8)==0){
+    if (strncmp("epsilon=", argv[i], 8)==0)
+    {
       epsilon=atof(&(argv[i][8]));
-      if ((epsilon<0) || (epsilon>1)){
-	cout << "Error (agent): epsilon must be in [0,1]" << endl;
-	exit(EXIT_FAILURE);
+      if ((epsilon<0) || (epsilon>1))
+      {
+		cout << "Error (agent): epsilon must be in [0,1]" << endl;
+		exit(EXIT_FAILURE);
       }
     }
 
   }
   delete decay[0];
+  
 }
 				
 int SarsaAgentRT::actAndLearn(int N, bool SaveTrajectory)
@@ -78,10 +85,11 @@ int SarsaAgentRT::actAndLearn(int N, bool SaveTrajectory)
   int j;
   double TDerror;
   
+  
   double* Qv = new double[actions.size];
-cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";				
+
   chooseAction(CurrentState, CurrentAction);
-cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";					
+
   while (i<N-1 && terminal==false)
   {
 		cout<<"\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<"  ";
@@ -198,11 +206,14 @@ void SarsaAgentRT::chooseAction(const State& s, Action& a)
   /* Implements an epsilon-greedy policy
    */
 {
+	
   int NumberAA=0;		//number of applicable actions
   int i;
-  int id;	//selected action id
+  int id=0;	//selected action id
 	cout<<"\n\nTotal Actions  : "<<actions.size;
   for (i=0;i<actions.size;i++)
+  {
+	 // cout<<"\t  , "<<actions.action[i] ;
     if (env->applicable(s,actions.action[i])==true)
       {
 		  
@@ -210,7 +221,8 @@ void SarsaAgentRT::chooseAction(const State& s, Action& a)
 			NumberAA++;
 			
       }
-
+  }
+  cout<<"\nApplicable actions = "<<NumberAA;
   if (NumberAA==0) 
     {	
 		cout << "\n\nNo action can be taken in the current state " << endl<<endl;
@@ -239,7 +251,10 @@ void SarsaAgentRT::chooseAction(const State& s, Action& a)
       {
 		cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";
 		id = ApplicableActions[i];
+		cout<<"\n\nValue of Id = "<<id<<"\n";
 		cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";
+		//a = actions.action[100];
+		//cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";
 		a  = actions.action[id];
 		cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";
 		fa->predict(a, s, Values[i]);

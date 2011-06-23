@@ -78,19 +78,19 @@ private:
 		
 	
 	/////////////////////////////////// RL Related
-    GoalLineUp* mdp;          // Environment
-	Environment* env;         // base pointer
+ //   GoalLineUp* mdp;          // Environment
+//	Environment* env;         // base pointer
 	
-	Approximator** cmacSet;   // CMAC approximatorSet
-	double* left ;            // State bounds
-    double* right;			  // State bounds
+//	Approximator** cmacSet;   // CMAC approximatorSet
+//	double* left ;            // State bounds
+ //   double* right;			  // State bounds
     
-    StateActionFA* safa;      // State-Action FA
+  //  StateActionFA* safa;      // State-Action FA
     
-    SarsaAgentRT* sarsa;      // SARSA Agent
-    Agent* agent;			  // Base pointer
+  //  SarsaAgentRT* sarsa;      // SARSA Agent
+  //  Agent* agent;			  // Base pointer
 	
-	MainParameters *mainP;     // Main Parameters
+//	MainParameters *mainP;     // Main Parameters
 	//////////////////////////////////////////////////
 	
 	ifstream ifile;
@@ -102,14 +102,15 @@ private:
 	
 	
 public:
-    LineUpWalkToBallState(LineUpProvider* parent,MainParameters *mainp,
-						StateActionFA* sa_fa, Agent* p_agent, bool savefa=true) : LineUpState(parent)
+    LineUpWalkToBallState(LineUpProvider* parent): LineUpState(parent) //,MainParameters *mainp, StateActionFA* sa_fa, Agent* p_agent, bool savefa=true) : LineUpState(parent)
     {
 		
-		mainP = mainp;
-		safa = sa_fa;
-		agent = p_agent;
-		saveFA = savefa;
+		//mainP = mainp;
+		//safa = sa_fa;
+		//agent = p_agent;
+		//saveFA = savefa;
+        
+        m_parent = parent;
         
 		/////////// Kick Related Stuff
 		canKick = false;
@@ -121,10 +122,10 @@ public:
 		///////////    RL Related File handing Stuff
 
 		runID = new char[5];
-		sprintf(runID, "%d",  mainP->run);
+		sprintf(runID, "%d",  m_parent->mainP->run);
 		
 		fileHistory = new char[100];	//name of the file for learning history data
-		strcpy(fileHistory,  mainP->dir);
+		strcpy(fileHistory,  m_parent->mainP->dir);
 		strcat(fileHistory, "r_");
 		strcat(fileHistory, runID);
 		strcat(fileHistory ,".hst");
@@ -133,7 +134,7 @@ public:
 		for (i=0; i<Action::count; i++)
 		{
 			fileAP[i] = new char[100];
-			strcpy(fileAP[i],  mainP->dir);
+			strcpy(fileAP[i],  m_parent->mainP->dir);
 			strcat(fileAP[i], "r_");
 			strcat(fileAP[i],runID);
 			char temp[5];
@@ -144,22 +145,22 @@ public:
 		
 		//load test states
 		char c;
-		if ( mainP->TestStatesFile==NULL)
+		if ( m_parent->mainP->TestStatesFile==NULL)
 		{
 			cout << "No name specified for the file containing test states \n\n" << endl;
 			exit(EXIT_FAILURE);
 		}
-		ifile.open( mainP->TestStatesFile);
+		ifile.open( m_parent->mainP->TestStatesFile);
 		if (ifile.fail())
 		{
 			cout << "Cannot open file to load test set\n\n" << cout;
 			exit(EXIT_FAILURE);
 		}
 		
-		 TestStates=new State[ mainP->TestStatesNumber];
+		 TestStates=new State[ m_parent->mainP->TestStatesNumber];
 		double random;
 		
-		for (i=0; i< mainP->TestStatesNumber; i++)
+		for (i=0; i< m_parent->mainP->TestStatesNumber; i++)
 		{
 			
 			ifile >> random;
@@ -216,30 +217,30 @@ public:
 		//test policy before learning
 		avrTR=0;
 		avrTRS=0;
-		for(k=0; k< mainP->TestSamples; k++)
+		for(k=0; k< m_parent->mainP->TestSamples; k++)
 		{	
 			sampleTR=0;
 			sampleTRS=0;
-			for(j=0; j< mainP->TestStatesNumber; j++)
+			for(j=0; j< m_parent->mainP->TestStatesNumber; j++)
 			{
 				
-				steps=agent->initTrial( mainP->Steps, false, false, &( TestStates[j]), NULL,false);
+				steps = m_parent->agent->initTrial( m_parent->mainP->Steps, false, false, &( TestStates[j]), NULL,false);
 				
-				sampleTR+= agent->getReturn();
+				sampleTR+= m_parent->agent->getReturn();
 				if (steps!=0)
-					sampleTRS+=  agent->getReturn()/(double)steps;
+					sampleTRS+=  m_parent->agent->getReturn()/(double)steps;
 			}
-			sampleTR/=(double)( mainP->TestStatesNumber);
-			sampleTRS/=(double)( mainP->TestStatesNumber);
-			avrTR+=sampleTR;
-			avrTRS+=sampleTRS;
+			sampleTR/=(double)( m_parent->mainP->TestStatesNumber);
+			sampleTRS/=(double)( m_parent->mainP->TestStatesNumber);
+			avrTR += sampleTR;
+			avrTRS += sampleTRS;
 		}
 		
-		avrTR/=(double)(mainP->TestSamples);
-		avrTRS/=(double)(mainP->TestSamples);
+		avrTR/=(double)(m_parent->mainP->TestSamples);
+		avrTRS/=(double)(m_parent->mainP->TestSamples);
 		
-		 safa->getMaxParameterChange(MaxParameterChanges);
-		 safa->getNumberParametersChanged(NumberParametersChanged);
+		 m_parent->safa->getMaxParameterChange(MaxParameterChanges);
+		 m_parent->safa->getNumberParametersChanged(NumberParametersChanged);
 		
 		ofsHistory << 0 << "\t" << avrTR << "\t" << avrTRS;
 		for(j=0; j<Action::count; j++){
@@ -257,37 +258,37 @@ public:
 	void learnPolicy()
 	{
 		
-		if (i<= mainP->Trials)
+		if (i<= m_parent->mainP->Trials)
 		{
 			i++;                   // Steps in trial, LearnOrNot,  SaveTrajectory?, startingState, fileName4Trajectory, BellmanError? 
-			steps =  agent->initTrial( mainP->Steps,       true,       false,          NULL,          "trajectory.dat", false); //learning trial
+			steps =  m_parent->agent->initTrial( m_parent->mainP->Steps,       true,       false,          NULL,          "trajectory.dat", false); //learning trial
 			
-			if ((i% mainP->TestFrequency)==0)                  // after few episodes, the agent is tested. This happnes at specified frequency
+			if ((i% m_parent->mainP->TestFrequency)==0)                  // after few episodes, the agent is tested. This happnes at specified frequency
 			{ //testing current policy
 				avrTR=0;
 				avrTRS=0;
-				for(k=0; k< mainP->TestSamples; k++)
+				for(k=0; k< m_parent->mainP->TestSamples; k++)
 				{	
 					sampleTR=0;
 					sampleTRS=0;
-					for(j=0; j< mainP->TestStatesNumber; j++)
+					for(j=0; j< m_parent->mainP->TestStatesNumber; j++)
 					{
-						steps=agent->initTrial(mainP->Steps, false, false, &(TestStates[j]), NULL,false);
-						sampleTR+=agent->getReturn();
+						steps = m_parent->agent->initTrial(m_parent->mainP->Steps, false, false, &(TestStates[j]), NULL,false);
+						sampleTR += m_parent->agent->getReturn();
 						if (steps!=0)
-							sampleTRS+=agent->getReturn()/(double)steps;
+							sampleTRS += m_parent->agent->getReturn()/(double)steps;
 					}
-					sampleTR/=(double)(mainP->TestStatesNumber);
-					sampleTRS/=(double)(mainP->TestStatesNumber);
-					avrTR+=sampleTR;
-					avrTRS+=sampleTRS;
+					sampleTR/=(double)(m_parent->mainP->TestStatesNumber);
+					sampleTRS/=(double)(m_parent->mainP->TestStatesNumber);
+					avrTR += sampleTR;
+					avrTRS += sampleTRS;
 				}
 				
-				avrTR/=(double)(mainP->TestSamples);
-				avrTRS/=(double)(mainP->TestSamples);
+				avrTR/=(double)(m_parent->mainP->TestSamples);
+				avrTRS/=(double)(m_parent->mainP->TestSamples);
 				
-				safa->getMaxParameterChange(MaxParameterChanges);
-				safa->getNumberParametersChanged(NumberParametersChanged);
+				m_parent->safa->getMaxParameterChange(MaxParameterChanges);
+				m_parent->safa->getNumberParametersChanged(NumberParametersChanged);
 				
 				ofsHistory << i << "\t" << avrTR << "\t" << avrTRS;
 				for(j=0; j<Action::count; j++)
@@ -306,7 +307,7 @@ public:
 		
 		
 		if (saveFA==true) 
-			safa->saveAllArchitectureParameters(fileAP);
+			m_parent->safa->saveAllArchitectureParameters(fileAP);
 		
 		
 	}
@@ -348,7 +349,7 @@ public:
 					// set all initial values, get observations from environment
 			
 					// Test policy before learning
-					//performInitialTest();
+					performInitialTest();
 					cout<<"\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<"  \n\n";
 			
         }

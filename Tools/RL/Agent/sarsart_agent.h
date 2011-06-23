@@ -20,7 +20,8 @@ class SarsaAgentRT : public Agent {
   double epsilon;//parameter for an epsilon greedy policy
 
  public:
-  SarsaAgentRT(double g, const ActionSet& a_s, StateActionFA* const f, Environment * const e);
+  //SarsaAgentRT(double g, const ActionSet& a_s, StateActionFA* const f, Environment * const e);
+  SarsaAgentRT(double g, ActionSet a_s, StateActionFA* const f, Environment * const e);
   /* General constructor.
      Parameters:
      g : discount facor

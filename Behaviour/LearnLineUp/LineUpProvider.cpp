@@ -148,6 +148,7 @@ void LineUpProvider::setupRlEngine()
   Action a6("decRot", 6);
   actionSet.addAction(a6);
 
+cout<<"\n\nSize of Action Set = "<<actionSet.size;
 
 
 ////////////////       Defining the environment
@@ -178,6 +179,7 @@ void LineUpProvider::setupRlEngine()
 /////////////// Finalising State-Action FA
   safa = new StateActionFA(Action::count, cmacSet);
   char *d[] = {"schedule=constant","alpha=0.5"};
+ 
   for(int i=0; i<Action::count; i++)
   {
     cmacSet[i]->setLearningParameters(2, d);
@@ -187,10 +189,12 @@ void LineUpProvider::setupRlEngine()
 //////////////  Setup Agent
                           //discount factor ,  Possible actions   Approximator		Environment
   sarsa = new SarsaAgentRT(    1,				   actionSet,			safa,			env);
+  
+  
   agent = sarsa;
   agent->setLearningParameters(2, d);
   
-  m_localiseBall = new LineUpWalkToBallState(this,mainP, safa, agent, true);
+  m_localiseBall = new LineUpWalkToBallState(this); //,mainP, safa, agent, true);
 
 }
 
