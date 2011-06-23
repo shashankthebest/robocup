@@ -177,13 +177,15 @@ cout<<"\n\nSize of Action Set = "<<actionSet.size;
   
 
 /////////////// Finalising State-Action FA
-  safa = new StateActionFA(Action::count, cmacSet);
   char *d[] = {"schedule=constant","alpha=0.5"};
  
   for(int i=0; i<Action::count; i++)
   {
     cmacSet[i]->setLearningParameters(2, d);
-  }  
+  } 
+
+  safa = new StateActionFA(Action::count, cmacSet);
+ 
   
 
 //////////////  Setup Agent

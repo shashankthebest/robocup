@@ -17,7 +17,9 @@ StateActionFA::StateActionFA(int n, Approximator** f)
 				n : number of actions (architectures)
 				f : pointer to the array of pointers to approximator objects
 		*/
-		:A(n),fa(f){}
+		:A(n),fa(f)
+{
+}
 	
 StateActionFA::	~StateActionFA(){
 	int i;
@@ -82,6 +84,7 @@ void StateActionFA::predict(const Action& a, const State& s,  double& output)
     cout << "\n\nError (safa): attempt to use non-existent Approximator object" << endl;
     exit(EXIT_FAILURE);
   }
+  //cout<<"\n\nAction id is = "<<a.id<<"\n\n";
   fa[a.id]->predict(s, output); 
 	  
 	  //fa[a.id] is a base pointer to a derived object: dinamic binding

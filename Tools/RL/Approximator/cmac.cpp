@@ -588,7 +588,8 @@ void CMAC::createCMAC(int t, int** n){
   MaxParameterChange=0;
   NumberParametersChanged=0;
 
-  for(i=0; i<t; i++){
+  for(i=0; i<t; i++)
+  {
     Tiling* til = new Tiling(n[i]);
     tilings[i] = (*til);
     NumberOfParameters=NumberOfParameters+tilings[i].getSize();
