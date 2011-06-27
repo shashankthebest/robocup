@@ -191,7 +191,8 @@ void StateActionFA::saveAllArchitectureParameters(char** fileNames){
   int i;
 
   for (i=0; i<A; i++){
-    if (fa[i]!=NULL){
+    if (fa[i]!=NULL)
+    {
       strcpy(filePar[0],fileNames[i]);
       fa[i]->saveArchitectureParameters(1,filePar);
     }

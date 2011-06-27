@@ -316,7 +316,7 @@ void GoalLineUp::bound(int i, bool& bounded, double& left, double& right)
 	if (i==0) 
 	{	
 		left = 0;
-		right= 80;
+		right= 120;
 		return;
 	}
 	if (i==1)

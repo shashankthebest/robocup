@@ -315,8 +315,8 @@ public:
 		}	//end of the learning loop
 		
 		
-	//	if (saveFA==true) 
-	//		m_parent->safa->saveAllArchitectureParameters(fileAP);
+		if (saveFA==true && i%200==0) 
+			m_parent->safa->saveAllArchitectureParameters(fileAP);
 		
 		
 	}
@@ -405,27 +405,7 @@ public:
 //				targetPosition[1] = kickPosition[1];
 				
 				// collect all info, and keep ready for rl algo
-				if( (runCount >10))
-				{
-					if (learnCount%10==0 )
-					{
-						cout<<"\nLearnCount = "<<learnCount;
-						learnPolicy();
-					}
-					learnCount++;
-					
-					if(learnCount > 32000)
-						learnCount = 1;
-					
-					
-				}
-				else 
-				{
-					runCount++;
-					
-					m_jobs->addMotionJob(new WalkJob(0.01,0,0));
-										 
-				}
+
 			}
 			else  if (ball.TimeSinceLastSeen() > 250)
 			{
@@ -440,6 +420,29 @@ public:
 				if (m_current_time - m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].TimeLastSeen() > 2000)
 					lostBall = true;
 			}
+			
+			if( (runCount >5))
+			{
+				if (learnCount%5==0 )
+				{
+					//cout<<"\nLearnCount = "<<learnCount;
+					learnPolicy();
+				}
+				learnCount++;
+				
+				if(learnCount > 32000)
+					learnCount = 1;
+					
+					
+			}
+			else 
+			{
+				runCount++;
+				
+				//m_jobs->addMotionJob(new WalkJob(0.01,0,0));
+									 
+			}
+			
 
 		}
 };

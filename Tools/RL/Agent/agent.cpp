@@ -171,14 +171,26 @@ int Agent::stepTrial(bool learning, bool SaveTrajectory, bool ComputeBellmanErro
 	{
 //		for (i=0; i<trajectory->length-1; i++)
 		{
+			
+			// Which stage
 			cout<< "Stage " << stepsInTrial << ": ";
 			cout << "\t" << trajectory->stage[stepsInTrial-1].state;
 
-		//	cout << "\t(";
-		//	for (j=0; j<actions.size; j++)
-		//		cout <<trajectory->stage[stepsInTrial-1].Qvalue[j] << ",";
-		//	cout << ")";
-			/*
+			// What are available q values
+			cout << "\t(";
+			for (j=0; j<actions.size; j++)
+				cout <<trajectory->stage[stepsInTrial-1].Qvalue[j] << ",";
+			cout << ")";
+			
+			// What is the current action
+			cout << "\t" << trajectory->stage[stepsInTrial-1].action;
+			
+			// What is current reward
+			cout << "\t" << trajectory->stage[stepsInTrial-1].reward;
+			
+			// What is current TD error
+			cout << "\t" << trajectory->stage[stepsInTrial-1].TDerror << endl;
+			
 			
 			file << "Stage " << stepsInTrial << ": ";
 			file << "\t" << trajectory->stage[stepsInTrial-1].state;
@@ -190,7 +202,7 @@ int Agent::stepTrial(bool learning, bool SaveTrajectory, bool ComputeBellmanErro
 			
 			if (learning)
 			{
-				file << "\t(";
+				file << "\n\t(";
 				for (j=0; j<actions.size; j++)
 					file <<trajectory->stage[stepsInTrial-1].Qvalue[j] << ",";
 				file << ")";
@@ -209,10 +221,10 @@ int Agent::stepTrial(bool learning, bool SaveTrajectory, bool ComputeBellmanErro
 				exit(EXIT_FAILURE);
 			}
 			file << "\t" << trajectory->stage[stepsInTrial-1].TDerror << endl;
-			*/
+			
 		}
 	
-		/*
+		
 		file << "Stage " << trajectory->length-1 << ": ";
 		
 		file << "\t" << trajectory->stage[trajectory->length-1].state << endl;
@@ -224,7 +236,7 @@ int Agent::stepTrial(bool learning, bool SaveTrajectory, bool ComputeBellmanErro
 		
 		
 		file << "Return=" << Return << endl;
-		 */
+		 
 		//delete trajectory;
 		 
 		 
