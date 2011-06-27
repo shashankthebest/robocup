@@ -54,6 +54,7 @@ const NUActionatorsData::id_t NUActionatorsData::Teleporter(a_curr_id++, "Telepo
  */
 NUActionatorsData::NUActionatorsData()
 {
+	resetSimulation = false;
     #if DEBUG_NUACTIONATORS_VERBOSITY > 0
         debug << "NUActionatorsData::NUActionatorsData" << endl;
     #endif

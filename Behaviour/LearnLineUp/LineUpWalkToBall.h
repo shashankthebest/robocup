@@ -266,6 +266,12 @@ public:
 
 			m_parent->agent->stepTrial(true,true,false);
 
+			if(i==20)
+			{
+				Blackboard->Actions->resetSimulation = true;
+				//Blackboard->Actions->add(NUActionatorsData::Teleporter, m_data->GetTimestamp(), sounds);
+			}
+				
 			
 			
 			//			steps =  m_parent->agent->initTrial( 1,       true,       true,          NULL,          "trajectory.dat", false); //learning trial
