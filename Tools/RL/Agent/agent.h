@@ -3,6 +3,8 @@
 
 #include "Tools/RL/Misc/globals.h"
 #include "Tools/RL/Environment/environment.h"
+#include <fstream>
+using namespace std;
 
 class Agent { //implementation of some non-virtual functions in agent.cpp
 	
@@ -34,6 +36,13 @@ public:
      ComputeBellmanError : indicates if estimated Bellman Error should be computed. Has a default false value.
 	 */
 	
+	
+	int initStepWiseTrial(int N, bool learning, bool SaveTrajectory, const State* s , char* fileName , bool ComputeBellmanError ); 
+	
+	void endStepTrial();
+	int stepTrial(bool learning, bool SaveTrajectory, bool );
+	
+	
 	double getReturn();
 	/* Gets return collected during the last trial
 	 */
@@ -64,6 +73,10 @@ public:
 	 */
 	
 	virtual ~Agent();
+private:
+	unsigned int stepsInTrial;
+	ofstream file;
+	//string trajectoryFile;
 	
 protected:
 	
@@ -114,6 +127,8 @@ protected:
      N : maximal number of steps in the trial;
      SaveTrajectory : indicates whether trajectory should be saved
 	 */
+	
+	virtual int stepActAndLearn(int N, bool SaveTrajectory)=0;
 	
 	
 	virtual void chooseAction(const State& s, Action& a) =0 ;

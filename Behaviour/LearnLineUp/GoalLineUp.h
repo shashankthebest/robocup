@@ -8,19 +8,37 @@
 #include<sys/types.h>		
 
 #include "Tools/RL/rlIncludes.h"
+#include <vector>
+using namespace std;
+
+
 
 class GoalLineUp : public Environment{
 
  protected:
   int Stages;
-
+	double transVel,dirTheta,rotVel;
+	vector <float> currPos;
+	float compass;
+	float measureddistance;
+	float balldistance;
+	float ballbearing;
+	vector<float> kickPosition;
+	vector<float> targetPosition;
+	vector<float>currVel;
+	float mixedSpeed;
+	
  public:
 
   GoalLineUp();//double theta);
   /*	Default constructor.
 	Initializes state
   */
+	
   void uniformStateSample(State& s);
+	
+	
+  void makeObservation();
 
   void startState(State& start, bool& terminal);
   /*	Selects start state according to the uniformly random distribution

@@ -141,7 +141,9 @@ void Environment::computeAttributes(Attributes& att, const State& startState, in
   bool bounded;
   int SampleSize=0; //true sample size - length of the trijectory
   IndCoef[State::dimensionality-1]=1;
-  for (i=State::dimensionality-1; i>=0; i--){
+  
+	for (i=State::dimensionality-1; i>=0; i--)
+  {
     bound(i, bounded, left[i], right[i]);
     h[i]=(right[i]-left[i])/n[i];
     B=B*n[i];
@@ -167,45 +169,54 @@ void Environment::computeAttributes(Attributes& att, const State& startState, in
 		
 
 
-  for(i=0; i<Steps; i++){
+  for(i=0; i<Steps; i++)
+  {
 	   	
 			
-    for (j=0; j<as.size; j++){
+    for (j=0; j<as.size; j++)
+	{
       sample[i][j].currentState=CurrentStateOnTraj;
       sample[i][j].setTransitionNumber(Transitions);
       sample[i][j].a=as.action[j];
 
-      for(k=0; k<Transitions; k++){
-			    
-	setState(sample[i][j].currentState, terminal);
-	transition(sample[i][j].a, sample[i][j].nextState[k], sample[i][j].reward[k], terminal);
-					
-					
-	//compute index of the bin for the next state
-	index=0;
-	for(d=0; d<State::dimensionality; d++){
-			      
-	  if (sample[i][j].nextState[k].x[d]==right[d]){ ind=n[d]-1; diag=0;}
-	  else{
-	    ind=(int)(float)((sample[i][j].nextState[k].x[d]-left[d])/h[d]);
-	    diag=1;
-	    if (ind == n[d]) ind=n[d]-1;
-				
+      for(k=0; k<Transitions; k++)
+	  {
+		  
+		  setState(sample[i][j].currentState, terminal);
+		  transition(sample[i][j].a, sample[i][j].nextState[k], sample[i][j].reward[k], terminal);
+		  
+		  
+		  //compute index of the bin for the next state
+		  index=0;
+		  for(d=0; d<State::dimensionality; d++)
+		  {
+			  
+			  if (sample[i][j].nextState[k].x[d]==right[d])
+			  { 
+				  ind=n[d]-1; diag=0;
+			  }
+			  else
+			  {
+				  ind=(int)(float)((sample[i][j].nextState[k].x[d]-left[d])/h[d]);
+				  diag=1;
+				  
+				  if (ind == n[d]) 
+					  ind=n[d]-1;	
+			  }
+			  index=index+IndCoef[d]*ind;
+		  }
+		  
+		  if ((index<0) || (index>=B)) 
+		  {
+			  cout << "Error1 (Environment-attributes): bin index out of limits" << endl;
+			  cout << "diagnostic=" << diag << endl;
+			  cout << "State = " << sample[i][j].nextState[k] << endl;
+			  cout << "index=" << index << " B=" << B << endl;
+			  exit(EXIT_FAILURE);
+		  }
+		  
+		  sample[i][j].binIndexNS[k]=index;
 	  }
-	  index=index+IndCoef[d]*ind;
-	}
-		
-	if ((index<0) || (index>=B)) {
-	  cout << "Error1 (Environment-attributes): bin index out of limits" << endl;
-	  cout << "diagnostic=" << diag << endl;
-	  cout << "State = " << sample[i][j].nextState[k] << endl;
-	  cout << "index=" << index << " B=" << B << endl;
-	  exit(EXIT_FAILURE);
-	}
-
-	sample[i][j].binIndexNS[k]=index;
-
-      }
     }
 			
     chooseAction(0,fa,as,CurrentStateOnTraj,CurrentActionOnTraj);
@@ -213,29 +224,33 @@ void Environment::computeAttributes(Attributes& att, const State& startState, in
     setState(CurrentStateOnTraj, terminal);
     transition(CurrentActionOnTraj, CurrentStateOnTraj, reward, terminal);
     SampleSize++;
-    if (terminal==true) break;
+    if (terminal==true) 
+		break;
   }
 
   //cout << "samples gathered" << endl;
 
   //Compute attributes based on that sample (everything except multi step entropy and size)
 
-  for (i=0; i<SampleSize; i++){
-    for(j=0; j<as.size; j++){
+  for (i=0; i<SampleSize; i++)
+  {
+    for(j=0; j<as.size; j++)
+	{
       sample[i][j].computeTransitionProbabilities(B);
-
     }
   }
 
   //Compute Entropy
   att.Entropy[0]=0;
   double saEntropy;
-  for (i=0; i<SampleSize; i++){
+  for (i=0; i<SampleSize; i++)
+  {
     j=ActionsOnTraj[i];
     saEntropy=0;
-    for(k=0; k<B; k++){
-      if (sample[i][j].prob[k] !=0 )
-	saEntropy-= sample[i][j].prob[k]*log10(sample[i][j].prob[k])/(double)log10(2.0);
+    for(k=0; k<B; k++)
+	{
+		if (sample[i][j].prob[k] !=0 )
+			saEntropy-= sample[i][j].prob[k]*log10(sample[i][j].prob[k])/(double)log10(2.0);
     }
     att.Entropy[0]+=saEntropy;
 			
@@ -439,14 +454,18 @@ void Environment::chooseAction(double epsilon, StateActionFA* fa, const ActionSe
   int* ApplicableActions = new int[actions.size];
 	
   for (i=0;i<actions.size;i++)
+  {
     if (applicable(s,actions.action[i])==true)
-      {	ApplicableActions[NumberAA]=i;
-      NumberAA++;
+      {	
+		  ApplicableActions[NumberAA]=i;
+		  NumberAA++;
       }
-
+  }
+	
   if (NumberAA==0) 
-    {	cout << "No action can be taken in the current state " << endl;
-    exit(EXIT_FAILURE);
+    {	
+		cout << "No action can be taken in the current state " << endl;
+		exit(EXIT_FAILURE);
     }
 
   if (fa==NULL) epsilon=1.0; //make sure random action will be selected
@@ -454,8 +473,8 @@ void Environment::chooseAction(double epsilon, StateActionFA* fa, const ActionSe
   if ((double)rand()/(double)RAND_MAX <= epsilon) 
     //take any action uniformenly
     {	
-      id=ApplicableActions[rand()%NumberAA];
-      a=actions.action[id];
+      id = ApplicableActions[rand()%NumberAA];
+      a  = actions.action[id];
     }
   else //select greedy ection
     {	
@@ -467,29 +486,33 @@ void Environment::chooseAction(double epsilon, StateActionFA* fa, const ActionSe
       Values = new double[NumberAA];
       GreedyActions = new int[NumberAA];
 
-      for (i=0; i<NumberAA; i++){
-	id=ApplicableActions[i];
-	a=actions.action[id];
-	fa->predict(a, s, Values[i]);
+      for (i=0; i<NumberAA; i++)
+	  {
+		  id = ApplicableActions[i];
+		  a  = actions.action[id];
+		  fa->predict(a, s, Values[i]);
       }
       BestValue=Values[0];
       NumberGreedyActions=1;
       GreedyActions[0]=ApplicableActions[0];
 
-      for (i=1; i<NumberAA; i++){
-	if (Values[i]>BestValue){
-	  BestValue=Values[i];
-	  NumberGreedyActions=1;
-	  GreedyActions[0]=ApplicableActions[i];
-	}
-	if (Values[i]==BestValue){
-	  NumberGreedyActions++;
-	  GreedyActions[NumberGreedyActions-1]=ApplicableActions[i];
-	}
-      }
+      for (i=1; i<NumberAA; i++)
+	  {
+		  if (Values[i]>BestValue)
+		  {
+			  BestValue=Values[i];
+			  NumberGreedyActions=1;
+			  GreedyActions[0]=ApplicableActions[i];
+		  }
+		  if (Values[i] == BestValue)
+		  {
+			  NumberGreedyActions++;
+			  GreedyActions[NumberGreedyActions-1]=ApplicableActions[i];
+		  }
+	  }
 		
-      gr=rand()%NumberGreedyActions;
-      a=actions.action[GreedyActions[gr]];
+      gr = rand()%NumberGreedyActions;
+      a  = actions.action[GreedyActions[gr]];
 
       delete [] Values;
       delete [] GreedyActions;

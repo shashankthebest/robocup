@@ -95,9 +95,10 @@ private:
 	
 	ifstream ifile;
 	ofstream ofsHistory;
-	
+	int runCount;
+	int learnCount;
 	bool saveFA;
-	
+	bool initialised;
 	
 	
 	
@@ -109,14 +110,14 @@ public:
 		//safa = sa_fa;
 		//agent = p_agent;
 		//saveFA = savefa;
-        
+        learnCount = 1;
         m_parent = parent;
-        
+        initialised = false;
 		/////////// Kick Related Stuff
 		canKick = false;
         kicked = false;
         lostBall = false;
-		
+		runCount = 0;
 		i = 0;
 		
 		///////////    RL Related File handing Stuff
@@ -260,9 +261,15 @@ public:
 		
 		if (i<= m_parent->mainP->Trials)
 		{
+			cout << "\n\nLearning trial no : "<<i<<"\n\n";;
 			i++;                   // Steps in trial, LearnOrNot,  SaveTrajectory?, startingState, fileName4Trajectory, BellmanError? 
-			steps =  m_parent->agent->initTrial( m_parent->mainP->Steps,       true,       false,          NULL,          "trajectory.dat", false); //learning trial
+
+			m_parent->agent->stepTrial(true,true,false);
+
 			
+			
+			//			steps =  m_parent->agent->initTrial( 1,       true,       true,          NULL,          "trajectory.dat", false); //learning trial
+			/*
 			if ((i% m_parent->mainP->TestFrequency)==0)                  // after few episodes, the agent is tested. This happnes at specified frequency
 			{ //testing current policy
 				avrTR=0;
@@ -303,11 +310,13 @@ public:
 					exit(EXIT_FAILURE);
 				}
 			} //end of testing
+			*/
+			
 		}	//end of the learning loop
 		
 		
-		if (saveFA==true) 
-			m_parent->safa->saveAllArchitectureParameters(fileAP);
+	//	if (saveFA==true) 
+	//		m_parent->safa->saveAllArchitectureParameters(fileAP);
 		
 		
 	}
@@ -316,11 +325,11 @@ public:
 	
 	virtual BehaviourState* nextState()
     {
-        if(lostBall)
-            return m_parent->m_localiseBall;
-        if(kicked)
-            return m_parent->m_generate;
-        else
+        //if(lostBall)
+          //  return m_parent->m_localiseBall;
+        //if(kicked)
+          //  return m_parent->m_generate;
+        //else
             return this;
     };
     virtual void doState()
@@ -349,8 +358,16 @@ public:
 					// set all initial values, get observations from environment
 			
 					// Test policy before learning
-					performInitialTest();
-					cout<<"\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<"  \n\n";
+					//performInitialTest();
+					//cout<<"\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<"  \n\n";
+			
+			if(!initialised)
+			{
+				cout<<"\n\n\nInitialising trial\n\n";				
+				m_parent->agent->initStepWiseTrial( 1,       true,       true,          NULL,          "trajectory.dat", false); //learning trial
+				initialised = true;
+			}
+
 			
         }
 
@@ -388,9 +405,27 @@ public:
 //				targetPosition[1] = kickPosition[1];
 				
 				// collect all info, and keep ready for rl algo
-				
-				learnPolicy();
-				
+				if( (runCount >10))
+				{
+					if (learnCount%10==0 )
+					{
+						cout<<"\nLearnCount = "<<learnCount;
+						learnPolicy();
+					}
+					learnCount++;
+					
+					if(learnCount > 32000)
+						learnCount = 1;
+					
+					
+				}
+				else 
+				{
+					runCount++;
+					
+					m_jobs->addMotionJob(new WalkJob(0.01,0,0));
+										 
+				}
 			}
 			else  if (ball.TimeSinceLastSeen() > 250)
 			{

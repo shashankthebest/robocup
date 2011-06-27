@@ -113,7 +113,7 @@ void LineUpProvider::setupRlEngine()
 
 /////////////  Parameters for RL agent
   mainP = new MainParameters();
-  char* params[] = {"Trials=10000","steps=1000","str=cmac.unx","tf=5000","tsn=1","tsf=teststates.unx","ts=1","dir=learnData"};
+  char* params[] = {"Trials=10000","steps=1","str=cmac.unx","tf=5000","tsn=1","tsf=teststates.dat","ts=1","dir=learnData"};
   mainP->process(8,params);
 
 	
@@ -132,7 +132,7 @@ void LineUpProvider::setupRlEngine()
  
   //state space and actions for the mountain car task
 	
-  State::dimensionality=3;
+  State::dimensionality=4;
 
   ActionSet actionSet(6); // incTrans, decTrans, incDir, decDir, incRot, decRot
   Action a1("incTrans", 1.0);

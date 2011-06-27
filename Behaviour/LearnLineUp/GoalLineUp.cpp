@@ -38,8 +38,9 @@
 
 //	IMPLEMENTATION OF Environment class for mountain car task
 
-GoalLineUp::GoalLineUp():Environment()
+GoalLineUp::GoalLineUp(	):Environment(),currPos(3,0.0f),kickPosition(2,0),targetPosition(2,0),currVel(3,0.0f)
 {
+
 			/*	Default constructor.
 				Initializes state according to start state distribution
 			*/
@@ -47,7 +48,11 @@ GoalLineUp::GoalLineUp():Environment()
 		CurrentState.x = new double[3];
 		startState(CurrentState, t);
 		reward=-1;
+		transVel = 0;
+		dirTheta = 0; 
+		rotVel = 0;
 }
+
 
 void GoalLineUp::uniformStateSample(State& s)
 {
@@ -55,7 +60,8 @@ void GoalLineUp::uniformStateSample(State& s)
   //s.x[1]=-0.07+(double)rand()/((double)RAND_MAX)*0.14;//random number in [-0.07,0.07]- car's velocity
 }
 
-void GoalLineUp::startState(State& start, bool& terminal){
+void GoalLineUp::startState(State& start, bool& terminal)
+{
 			/*	Selects start state
 			*/
 	//CurrentState.x[0]=-1.2+(double)rand()/((double)RAND_MAX)*1.7;	//random number in [-1.2, 0.5] - car's position
@@ -69,9 +75,10 @@ void GoalLineUp::startState(State& start, bool& terminal){
 	Stages=1;
 }
 
-void GoalLineUp::setState(const State& s, bool& terminal){
-	CurrentState=s;
-	if ((CurrentState.x[0]<0)||(CurrentState.x[0]>50))
+void GoalLineUp::setState(const State& s, bool& terminal)
+{
+	CurrentState = s;
+	if ((CurrentState.x[0]<0)||(CurrentState.x[0]>100))
 	{
 		cout << "State set to invalid value" << endl;
 		cout << s << endl;
@@ -88,11 +95,15 @@ void GoalLineUp::setState(const State& s, bool& terminal){
 	Stages=1;
 }
 
-bool GoalLineUp::checkTerminal()
+void GoalLineUp::makeObservation()
 {
-	//m_current_position = m_field_objects->self.wmState();
-	vector <float> currPos(3,0.0f);
-	float compass = 0;
+
+	measureddistance = 0;
+	balldistance = 0;
+	ballbearing = 0;
+	compass = 0;
+	mixedSpeed = 0;
+	
 	Blackboard->Sensors->getCompass(compass );
 	currPos[2] = compass;
 	
@@ -100,31 +111,74 @@ bool GoalLineUp::checkTerminal()
 	
 	MobileObject& ball = Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL];
 	
-	float measureddistance = Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredDistance();
-	float balldistance = measureddistance * cos(Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredElevation());
-	float ballbearing = Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredBearing();
+	measureddistance = Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredDistance();
+	balldistance = measureddistance * cos(Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredElevation());
+	ballbearing = Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].measuredBearing();
 	
-	vector<float> kickPosition(2,0);
-	vector<float> targetPosition(2,0);
 	kickPosition[0] = ball.estimatedDistance() * cos(ball.estimatedBearing());
 	kickPosition[1] = ball.estimatedDistance() * sin(ball.estimatedBearing());
 	targetPosition[0] = kickPosition[0] + 1000.0f;
 	targetPosition[1] = kickPosition[1];
 	
-	vector<float>currVel(3,0.0f);
+	
 	Blackboard->Sensors->get(NUSensorsData::MotionWalkSpeed,currVel);
-	float mixedSpeed = currVel[0]*currVel[1];
+	mixedSpeed = currVel[0]*currVel[1];
 	
+	CurrentState.x[0] = ball.estimatedDistance();
+	CurrentState.x[1] = currPos[2];
+	CurrentState.x[2] = mixedSpeed;
 	
-	if ((fabs(currPos[0] - targetPosition[0]) <=20 )  &&  fabs(currPos[2] -TARGET_THETA) <= 0.034  
-	     && mixedSpeed<0.5 && currVel[2]<0.02)
+	if (Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].isObjectVisible())
+		CurrentState.x[3] = 1;
+	else 
 	{
-		retVal = true;
+		CurrentState.x[3] = 0;
 	}
-	
+
 	
 	
 }
+
+
+bool GoalLineUp::checkTerminal()
+{
+	//m_current_position = m_field_objects->self.wmState();
+	bool retVal = false;
+	makeObservation();
+	if (Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].isObjectVisible())  
+	{
+		if (balldistance <= 20 )
+		{
+			if((mixedSpeed < 0.1) && currVel[2]<0.02 )
+			{
+				retVal = true;
+			}
+		}
+		else 
+		{
+			retVal = false;
+		}
+
+		
+	}
+	else 
+	{
+		retVal = false;
+	}
+
+
+	return retVal;
+	//cout<<"\nCheching terminal";
+	
+}
+
+
+
+
+
+
+
+
 
 
 void GoalLineUp::transition(const Action& action, State& s_new, double& r_new, bool& terminal){
@@ -140,57 +194,68 @@ void GoalLineUp::transition(const Action& action, State& s_new, double& r_new, b
 
 		//new state and reward:
 
-		State s_last=CurrentState;
+		State s_last = CurrentState;
 		double temp;
 		
-		
+
 		//check action applicability
 		if (applicable(CurrentState, action)==false)
 		  {	cout << "Error (env_mc): unapplicable action performed in state: " << CurrentState << endl;
 			
 			exit(EXIT_FAILURE);
 		}
-		
-	
+		//\nPerformaing transition, Action taken
+		//cout<<" : "<<action.value;
 		
 		if (action.value == 1 ) // Increase Translation velocity
 		{
-			if (CurrentState.x[0] <1)
-				CurrentState.x[0] += 0.1;
+			if ( transVel <1)
+				transVel += 0.1;
 				
 		}
 		else if (action.value == 2)  // Decrease Translation velocity
 		{
-			if (CurrentState.x[0] >0)
-				CurrentState.x[0] -= 0.1;			
+			if (transVel >0)
+				transVel -= 0.1;			
 		}
 		else if (action.value == 3)  // Increase Angle
 		{
-			if (CurrentState.x[1] < mathGeneral::deg2rad(180))
-				CurrentState.x[1] += mathGeneral::deg2rad(2);						
+			if (dirTheta < mathGeneral::deg2rad(180))
+				dirTheta += mathGeneral::deg2rad(2);						
 		}
 		else if (action.value == 4)  // Decrease Angle
 		{
-			if (CurrentState.x[1] > mathGeneral::deg2rad(-180))
-				CurrentState.x[1] -= mathGeneral::deg2rad(2);									
+			if (dirTheta > mathGeneral::deg2rad(-180))
+				dirTheta -= mathGeneral::deg2rad(2);									
 		}
 		else if (action.value == 5)	 // Increase Rotational Velocity
 		{
-			if (CurrentState.x[2] < mathGeneral::deg2rad(180))
-				CurrentState.x[2] += mathGeneral::deg2rad(2);				
+			if (rotVel < mathGeneral::deg2rad(180))
+				rotVel += mathGeneral::deg2rad(1);				
 		}
 		else if (action.value == 6)	 // Decrease Rotational Velocity
 		{
-			if (CurrentState.x[2] > mathGeneral::deg2rad(-180))
-				CurrentState.x[2] -= mathGeneral::deg2rad(2);				
+			if (rotVel > mathGeneral::deg2rad(-180))
+				rotVel -= mathGeneral::deg2rad(1);				
 		}
 		
+		//cout<<" [ "<<CurrentState.x[0]<<", "<<CurrentState.x[1]<<", "<<CurrentState.x[2]<<" ] ";
+	
+	
+		WalkJob* walk = new WalkJob(transVel, dirTheta, rotVel);
+		Blackboard->Jobs->addMotionJob(walk);
+
+		
+		if(checkTerminal())  // Makes observation and checks for terminal state
+		{
+			reward = 10;
+			cout<<"\n\n\nReturned +ve reward\n\n";
+		}
+		else 
+			reward = -1;
 		
 		
-		
-		
-		
-		
+		/*
 		
 		//calculate new velocity
 		temp=s_last.x[1]+0.001*action.value-0.0025*cos(3*s_last.x[0]);
@@ -209,11 +274,11 @@ void GoalLineUp::transition(const Action& action, State& s_new, double& r_new, b
 		else if (temp<0.5) 
 				CurrentState.x[0]=temp;
 			else {CurrentState.x[0]=0.5;terminal=true;reward=0.0;}
-		
+		*/
 
-	CurrentAction=action;	//remember last action
-	s_new=CurrentState;	//return new state
-	r_new=reward;	//return new reward;
+	CurrentAction = action;	//remember last action
+	s_new = CurrentState;	//return new state
+	r_new = reward;	//return new reward;
 	Stages++;
 	
 
@@ -251,7 +316,7 @@ void GoalLineUp::bound(int i, bool& bounded, double& left, double& right)
 	if (i==0) 
 	{	
 		left = 0;
-		right= 50;
+		right= 80;
 		return;
 	}
 	if (i==1)
@@ -264,6 +329,12 @@ void GoalLineUp::bound(int i, bool& bounded, double& left, double& right)
 		left = 0;
 		right = 1;
 	}
+	if (i==3)
+	{
+		left = 0;
+		right = 1;
+	}
+	
 		
 }
 

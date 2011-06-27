@@ -43,21 +43,23 @@ void CMAC::Tiling::createTiles()
   N=1;
   IndCoef[State::dimensionality-1]=1;
 		
-  for(i=State::dimensionality-1; i>=0; i--){ 
+  for(i=State::dimensionality-1; i>=0; i--)			// Start from last state, travel to first
+  { 
     /*	offset the tiling along each dimension 
 	by a random amount bounded by the width 
 	of tiles along this dimension 
     */
-    offset = (double)rand()/(double)RAND_MAX*h[i];
-    n[i]=n[i]+1;
-    N=N*n[i];
-    origin[i]=LeftBounds[i]-offset;
-    if (i<(State::dimensionality-1))
-      IndCoef[i]=IndCoef[i+1]*n[i+1];
+    offset = (double)rand()/(double)RAND_MAX*h[i];   // get a random value
+    n[i] = n[i] + 1;								// Since one tile is added, increment the # tiles for this dim
+    N = N * n[i];									// Total no. of tiles for all dims
+    origin[i] = LeftBounds[i] - offset;				// Caclulate the base
+
+	if ( i< (State::dimensionality-1) )				// If not last state
+		IndCoef[i] = IndCoef[i+1] * n[i+1];			//
     
   }
 
-  tiles = new Tile[N];
+  tiles = new Tile[N];								// Create total tiles, corresponding to this tiling for all dims
 
 #ifdef DEBUG
   cout << "Total number of tiles: " << N << endl;
@@ -68,14 +70,15 @@ void CMAC::Tiling::createTiles()
 
 }
 
-CMAC::Tiling::Tiling(){
-  n=new int[State::dimensionality];
-  h=new double[State::dimensionality];
-  origin = new double[State::dimensionality];
-  IndCoef = new int[State::dimensionality];
-  N=0;
-  ALPHA_VISITATION_FACTOR=1;
-  tiles=NULL;
+CMAC::Tiling::Tiling()
+{
+  n = new int[State::dimensionality];  // Stores number of tiles accross each dimension, therefore its size should be same as dim
+  h = new double[State::dimensionality]; // Stores size of tiles accross each dimension, therefore its size should be same as dim
+  origin = new double[State::dimensionality]; //coordinates of the lower left corner of the tiling, for each dimension
+  IndCoef = new int[State::dimensionality];  //coefficients used to calculate index of a tile in the one-dimensional array of tiles
+  N = 0;  //total number of tiles
+  ALPHA_VISITATION_FACTOR = 1;
+  tiles = NULL;
 }
 
 CMAC::Tiling::Tiling(const int* nn){
@@ -488,8 +491,10 @@ void CMAC::Tiling::setParameters(ifstream& file){
 
   for(i=0; i<State::dimensionality; i++){
     file >> h[i];
-    if (file.fail()){
-      cout << "Error (tiling): input failed (6) " << i << endl;
+    if (file.fail())
+	{
+      
+		cout << "Error (tiling): input failed (6) " << i << endl << __FILE__<<"  "<<__LINE__;
       exit(EXIT_FAILURE);
     }
   }
@@ -549,12 +554,13 @@ CMAC::Tiling::~Tiling(){
 }
 
 CMAC::CMAC(char* fileName){
-  int TilingsNumber;
+  int TilingsNumber = 0;
   int** TilesNumber=NULL;
 
   setCmacStructure(fileName, TilingsNumber, &TilesNumber);
   
-
+//  cout<<"\nAt file "<<__FILE__<<" on line "<<__LINE__<<"  TilingsNumber  = "<<TilingsNumber<<"\n\n\n";
+	
   if (TilesNumber==NULL){
     cout << "Something is wrong with reading CMAC structure from file" << fileName << endl;
     exit(EXIT_FAILURE);
@@ -592,19 +598,21 @@ void CMAC::createCMAC(int t, int** n){
   {
     Tiling* til = new Tiling(n[i]);
     tilings[i] = (*til);
-    NumberOfParameters=NumberOfParameters+tilings[i].getSize();
+    NumberOfParameters = NumberOfParameters+tilings[i].getSize();
   }
 		
   CMAC::Tiling::setTraceDecay(0.0);
 }
 
-int CMAC::getSize(){
+int CMAC::getSize()
+{
   /*	Returns total number of parameters in this camc architecture
    */
   return NumberOfParameters;
 }
 
-void CMAC::setInputBounds(const double* left, const double* right){
+void CMAC::setInputBounds(const double* left, const double* right)
+{
   /*	Sets bounds on input variables
    */
   CMAC::Tiling::setBounds(left, right);
@@ -627,9 +635,8 @@ void CMAC::predict(const State& s, double& output)
  output=0;
  for(i=0; i<T; i++)
  {
-	 
    tilings[i].getActiveParameter(s, w, ind);
-   output=output+w;
+   output = output+w;
  }
 
 #ifdef DEBUG

@@ -50,6 +50,22 @@ class SarsaAgentRT : public Agent {
   ~SarsaAgentRT();
   /* Destructor.
    */
+	
+	
+private:
+	State NewState;
+	Action NewAction;
+	double Qvalue, Qcheck;
+	double discount;
+	int i;
+	int steps;
+	int j;
+	double TDerror;
+	bool startedLearning;
+	
+	double* Qv;	
+	
+	
 					
  protected:
 
@@ -65,6 +81,11 @@ class SarsaAgentRT : public Agent {
      SaveTrajectory: indicates if trajectory has to be saved.
 				
   */
+	
+	void startLearning(int N, bool SaveTrajectory);
+	
+	int stepActAndLearn(int N, bool SaveTrajectory);
+
 	
   int act(int N, bool SaveTrajectory, bool ComputeBellmanError);
   /* Implements maximum of N successive steps of the trial

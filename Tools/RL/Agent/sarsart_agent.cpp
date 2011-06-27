@@ -16,9 +16,9 @@ SarsaAgentRT::SarsaAgentRT(double g, ActionSet a_s,  StateActionFA* const f,  En
   //initialization list
   : Agent(g, a_s, f, e)
 {	
-	cout<<"\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<"  ";
   lambda=0;
   epsilon=0;
+	startedLearning = false;
 }
 
 void SarsaAgentRT::helpLearningParameters(){
@@ -71,7 +71,87 @@ void SarsaAgentRT::setLearningParameters(int argc, char *argv[])
   delete decay[0];
   
 }
-				
+
+void SarsaAgentRT::startLearning(int N, bool SaveTrajectory)
+{
+	discount=1.0;
+	i=0;
+	steps=0;
+	
+	Qv = new double[actions.size];
+	
+	chooseAction(CurrentState, CurrentAction);
+	
+}
+
+
+int SarsaAgentRT::stepActAndLearn(int N, bool SaveTrajectory)
+{
+	if(!startedLearning)
+	{
+		startLearning(N, SaveTrajectory);
+		startedLearning = true;
+	}
+
+	
+	
+	fa->decayTraces(lambda*gamma);
+    fa->clearTraces(CurrentAction, CurrentState, 0);
+    fa->replaceTraces(CurrentAction, CurrentState, 1.0);
+    if (SaveTrajectory==true)
+    {
+		for (j=0; j<actions.size; j++)
+			fa->predict(actions.action[j],CurrentState,Qv[j]);        //// Predict value                                S
+    }
+    
+	env->transition(CurrentAction, NewState, CurrentReward, terminal);  //// Transit to next state                  A,R
+    steps++;
+    
+    chooseAction(NewState, NewAction);         ////  With new state, select an action                               S
+    
+    fa->predict(NewAction, NewState, Qvalue);  //// New reward                                                      A (SARSA)
+    
+    if (SaveTrajectory==true)
+    {
+		fa->predict(CurrentAction, CurrentState, Qcheck);
+		TDerror = Qcheck - (CurrentReward+gamma*Qvalue);
+    }
+    
+    //cout << "cs:" << CurrentState << " ca:" << CurrentAction.id << " ns:" << NewState << " cr=" << CurrentReward << " td=" << TDerror << endl;
+    fa->learn(CurrentAction, CurrentState, CurrentReward+gamma*Qvalue);
+	
+    if (SaveTrajectory==true)
+    {
+		trajectory->stage[i].state  = CurrentState;
+		trajectory->stage[i].action = CurrentAction;
+		trajectory->stage[i].reward = CurrentReward;
+		for (j=0; j<actions.size; j++)
+		{
+			trajectory->stage[i].Qvalue[j]=Qv[j];
+		}
+		trajectory->stage[i].TDerror = TDerror;
+		trajectory->length=i+1;
+		
+    }
+	
+    CurrentState  = NewState;
+    CurrentAction = NewAction;
+    Return = Return + discount*CurrentReward;
+    discount = discount*gamma;
+    i++;
+
+
+	if (SaveTrajectory==true)
+	{
+		trajectory->stage[i].state = CurrentState;	//trajectory ends with state
+		trajectory->length = i+1;
+	}
+	return steps;
+
+	
+}				
+
+
 int SarsaAgentRT::actAndLearn(int N, bool SaveTrajectory)
   
 {
@@ -92,7 +172,6 @@ int SarsaAgentRT::actAndLearn(int N, bool SaveTrajectory)
 
   while (i<N-1 && terminal==false)
   {
-		cout<<"\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<"  ";
     fa->decayTraces(lambda*gamma);
     fa->clearTraces(CurrentAction, CurrentState, 0);
     fa->replaceTraces(CurrentAction, CurrentState, 1.0);
@@ -210,7 +289,7 @@ void SarsaAgentRT::chooseAction(const State& s, Action& a)
   int NumberAA=0;		//number of applicable actions
   int i;
   int id=0;	//selected action id
-	cout<<"\n\nTotal Actions  : "<<actions.size;
+	//cout<<"\n\nTotal Actions  : "<<actions.size;
   for (i=0;i<actions.size;i++)
   {
 	 // cout<<"\t  , "<<actions.action[i] ;
@@ -222,7 +301,7 @@ void SarsaAgentRT::chooseAction(const State& s, Action& a)
 			
       }
   }
-  cout<<"\nApplicable actions = "<<NumberAA;
+ // cout<<"\nApplicable actions = "<<NumberAA;
   if (NumberAA==0) 
     {	
 		cout << "\n\nNo action can be taken in the current state " << endl<<endl;
@@ -249,16 +328,9 @@ void SarsaAgentRT::chooseAction(const State& s, Action& a)
 
       for (i=0; i<NumberAA; i++)
       {
-		cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";
 		id = ApplicableActions[i];
-		cout<<"\n\nValue of Id = "<<id<<"\n";
-		cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";
-		//a = actions.action[100];
-		//cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";
 		a  = actions.action[id];
-		cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";
 		fa->predict(a, s, Values[i]);
-		cout<<"\n\nI am here  : "<<__FILE__<<"   at "<<__LINE__<<" \n\n ";
       }
       
       BestValue = Values[0];
