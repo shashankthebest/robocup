@@ -164,13 +164,21 @@ void NAOWebotsActionators::copyToLeds()
  */
 void NAOWebotsActionators::copyToTeleporter()
 {
-    static bool l_isvalid;
-    static double l_time;
-    static vector<float> l_position(3, 0);
 #if DEBUG_NUACTIONATORS_VERBOSITY > 4
     debug << "NAOWebotsActionators::copyToTeleporter()" << endl;
 #endif 
+	if(m_data->resetSimulation)
+	{
+		static char buf[256];
+		sprintf(buf, "reset");
+		m_teleporter->send(buf, strlen(buf) + 1);
+	}
+
     /*
+	 static bool l_isvalid;
+	 static double l_time;
+	 static vector<float> l_position(3, 0);
+	 
     if (m_data->getNextTeleportation(l_isvalid, l_time, l_position))
     {
         if (l_isvalid == true)// && (l_time - m_current_time) < m_simulation_step)

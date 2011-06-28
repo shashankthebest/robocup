@@ -51,6 +51,7 @@ public:
     // Other actionators
     const static id_t Sound;
     const static id_t Teleporter;
+	bool resetSimulation;
 public:
     NUActionatorsData();
     ~NUActionatorsData();
