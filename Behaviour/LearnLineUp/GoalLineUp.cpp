@@ -328,7 +328,7 @@ bool GoalLineUp::applicable(const State& s, const Action& a)
 				retVal = true;
 		else if (aVal==3  && (dirTheta < mathGeneral::deg2rad(180) ))
 				retVal = true;
-		else if (aVal==4  && (dirTheta > -mathGeneral::deg2rad(180) ))
+		else if (aVal==4  && (dirTheta > mathGeneral::deg2rad(-180) ))
 				retVal = true;		
 		else if (aVal==5  && (rotVel  < 1 ))
 				retVal = true;						
