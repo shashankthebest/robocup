@@ -318,11 +318,25 @@ bool GoalLineUp::applicable(const State& s, const Action& a)
 		/*	Checks if action a is applicable in state s.
 		*/
 {
+		bool retVal = false;
+		
 		int aVal = (int)a.value;
-		if ((aVal==0 ) || (aVal==1 ) || (aVal==2 ) || (aVal==3 )  || (aVal==4 ) || (aVal==5 )  )
-			return true;
-		else 
-			return false;
+		
+		if (aVal==1 && (transVel <=0.9) )
+				retVal = true;
+		else if (aVal==2  && (transVel >0) )
+				retVal = true;
+		else if (aVal==3  && (dirTheta < mathGeneral::deg2rad(180) ))
+				retVal = true;
+		else if (aVal==4  && (dirTheta > -mathGeneral::deg2rad(180) ))
+				retVal = true;		
+		else if (aVal==5  && (rotVel  < 1 ))
+				retVal = true;						
+		else if (aVal==6  && (rotVel  > 0 ))
+				retVal = true;			
+		
+		return retVal;			
+
 }
 
 void GoalLineUp::bound(int i, bool& bounded, double& left, double& right)
