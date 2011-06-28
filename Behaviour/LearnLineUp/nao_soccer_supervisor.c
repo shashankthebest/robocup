@@ -27,6 +27,7 @@
 #include <webots/receiver.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include <math.h>
 #include <stdlib.h>
 
@@ -64,11 +65,13 @@ static const double PENALTY_GOALIE_X_POS = (FIELD_SIZE_X - LINE_WIDTH) / 2;
 
 // timing
 static const int    TIME_STEP = 40;            // should be a multiple of WorldInfo.basicTimeSTep
-static const double MAX_TIME = 20.0 * 60.0;    // a match half lasts 10 minutes
+static const double MAX_TIME = 10.0 * 60.0;    // a match half lasts 10 minutes
 
 // indices of the two robots used for penalty kick shoot-out
 static const int GOALIE = 0;
 static const int ATTACKER = 1;
+
+static int total_runs = 0;
 
 // waistband colors
 const double PINK[3] = { 0.9, 0.5, 0.5 };
@@ -95,7 +98,7 @@ static WbFieldRef ball_rotation = NULL;           // to reset ball rotation
 static WbDeviceTag emitter;                       // to send game control data to robots
 static WbDeviceTag receiver;                      // to receive 'move' requests
 static const double *ball_pos = ZERO_VEC_3;       // current ball position (pointer to)
-static double time;                               // time [seconds] since end of half game
+static double Time;                               // time [seconds] since end of half game
 static int step_count = 0;                        // number of steps since the simulation started
 static int last_touch_robot_index = -1;           // index of last robot that touched the ball
 static const char *message;                       // instant message: "Goal!", "Out!", etc.
@@ -110,7 +113,7 @@ enum {
 static int match_type = DEMO;
 
 // default team names displayed by the Supervisor
-static char team_names[2][64] = { "Team-0", "Team-1" };
+static char team_names[2][64] = { "Passive", "Active" };
 
 // RoboCup GameController simulation
 static struct RoboCupGameControlData control_data; 
@@ -201,14 +204,15 @@ static void display() {
 
   // display team names and current score
   char text[64];
-  sprintf(text, "%s - %d", get_team_name(TEAM_RED), control_data.teams[TEAM_RED].score);
+  sprintf(text, "%s - %d/%d", get_team_name(TEAM_RED), control_data.teams[TEAM_RED].score,total_runs);
+
   wb_supervisor_set_label(0, text, 0.05, 0.03, FONT_SIZE, 0xec0f0f, 0.0); // red
   sprintf(text, "%d - %s", control_data.teams[TEAM_BLUE].score, get_team_name(TEAM_BLUE));
   wb_supervisor_set_label(1, text, 0.99 - 0.025 * strlen(text), 0.03, FONT_SIZE, 0x0000ff, 0.0); // blue
 
   // display game state or remaining time
   if (control_data.state == STATE_PLAYING)
-    sprintf(text,"%02d:%02d",(int)(time/60),(int)time%60);
+    sprintf(text,"%02d:%02d",(int)(Time/60),(int)Time%60);
   else {
     static const char *STATE_NAMES[5] = { "INITIAL", "READY", "SET", "PLAYING", "FINISHED" };
     sprintf(text, "%s", STATE_NAMES[control_data.state]);
@@ -235,7 +239,7 @@ static void show_message(const char *msg) {
 
 static void sendGameControlData() {
   // prepare and send game control data
-  control_data.secsRemaining = (uint32)time;
+  control_data.secsRemaining = (uint32)Time;
   if (match_type == DEMO) {
     // ball position is not sent during official matches
     control_data.ballXPos = ball_pos[X];
@@ -272,6 +276,7 @@ static void initialize() {
   if (ball) {
     ball_translation = wb_supervisor_node_get_field(ball, "translation");
     ball_rotation = wb_supervisor_node_get_field(ball, "rotation");
+
   }
 
   // initialize game control data
@@ -458,7 +463,13 @@ static void read_incoming_messages() {
       handle_move_robot_request(request);
     else if (memcmp(request, "move ball ", 10) == 0)
       handle_move_ball_request(request);
+    else if (memcmp(request, "reset", 5) == 0)
+        {
+          show_message("Reset Simulation!");
+          wb_supervisor_simulation_quit(0);
+        }
     else
+
       fprintf(stderr, "received unknown message of %d bytes\n", wb_receiver_get_data_size(receiver));
 
     wb_receiver_next_packet(receiver);
@@ -529,7 +540,7 @@ static void place_to_kickoff() {
   }
 
   // reset ball position
-  move_ball_2d(0, 0);
+  move_ball_2d(10, 0); 
 }
 
 // run simulation for the specified number of seconds
@@ -550,28 +561,31 @@ static void hold_to_kickoff(double seconds) {
 }
 
 static void run_initial_state() {
-  time = MAX_TIME;
+  Time = MAX_TIME;
   control_data.state = STATE_INITIAL;
+  
   display();
-  hold_to_kickoff(5);
+  //hold_to_kickoff(1);
+
 }
 
 static void run_ready_state() {
   control_data.state = STATE_READY;
-  display();
-  run_seconds(5);
+ // display();
+ // run_seconds(0);
 }
 
 static void run_set_state() {
   control_data.state = STATE_SET;
-  display();
-  hold_to_kickoff(5);
+
+ // display();
+ // hold_to_kickoff(0);
 }
 
 static void run_finished_state() {
   control_data.state = STATE_FINISHED;
   display();
-  run_seconds(5);
+ // run_seconds(5);
 }
 
 static int is_in_kickoff_team(int robot_index) {
@@ -750,14 +764,15 @@ static void run_playing_state() {
   show_message("KICK-OFF!");
   kick_off_state = KICK_OFF_INITIAL;
   last_touch_robot_index = -1;
+  
 
   while (1) {
     // substract TIME_STEP to current time
-    time -= TIME_STEP / 1000.0;
+    Time -= TIME_STEP / 1000.0;
     display();
 
-    if (time < 0.0) {
-      time = 0.0;
+    if (Time < 0.0) {
+      Time = 0.0;
       control_data.state = STATE_FINISHED;
       return;
     }
@@ -801,8 +816,7 @@ static void run_playing_state() {
 
 static void terminate() {
 
-  //if (match_type != DEMO) 
-  {
+  if (match_type != DEMO) {
     FILE *file = fopen("scores.txt", "w");
     if (file) {
       if (teams_swapped())
@@ -816,37 +830,17 @@ static void terminate() {
 
     // give some time to show scores
     run_seconds(10);
-    show_message("Restarting Simulation!");
+
     // freeze webcam
-    //system("killall webcam.php");
+    system("killall webcam.php");
 
     // terminate movie recording and quit
     wb_supervisor_stop_movie();
     wb_robot_step(0);
-    run_seconds(10);    
-    
-     int robot_count = 0;
-  int i;
-  for (i = 0; i < MAX_NUM_ROBOTS; i++) {
-    WbNodeRef node = wb_supervisor_node_get_from_def(get_robot_def_name(i));
-    if (node) {
-      free(robots[i]);// = robot_new(node);
-      robot_count++;
-    }
-    
-  } 
-  
- // wb_supervisor_simulation_physics_reset();
- // wb_supervisor_simulation_revert();
-
-    
-    
-    
-    wb_supervisor_simulation_quit(0);
-    
+    wb_supervisor_simulation_quit(EXIT_SUCCESS);
   }
 
-  //while (1) step();  // wait forever
+  while (1) step();  // wait forever
 }
 
 // switch controllers, jersey colors and scores
@@ -898,8 +892,32 @@ static void run_half_time() {
 
 // randomize initial position for penalty kick shootout
 static double randomize_pos() {
-  return (double)rand() / (double)RAND_MAX * 0.01 - 0.005;   // +/- 1 cm
+  return (double)rand()  /RAND_MAX ;   // +/- 1 cm
 }
+
+static double randomize_posX() {
+
+//#define FIELD_SIZE_X         6.050   // official size of the field
+//#define FIELD_SIZE_Z         4.050   // for the 2008 competition
+  return (double)rand()  /RAND_MAX;
+}
+
+static double randomize_posY() {
+  return (double)rand() / (double)RAND_MAX * 0.01 - 0.005;
+}
+
+
+//static int random2() {
+//return (rand()<<15) | rand();
+//}
+
+static int randomNoBetween(int x, int y) {
+ srand ( time(0));
+return (random() %(y-x+1))+x;
+}
+
+
+
 
 // randomize initial angle for penalty kick shootout
 static double randomize_angle() {
@@ -921,52 +939,64 @@ static int ball_completely_inside_penalty_area() {
 static void run_penalty_kick(double delay) {
 
   // game control
-  time = delay;
+  Time = delay;
   control_data.kickOffTeam = TEAM_RED;
-  control_data.state = STATE_SET;
+ // control_data.state = STATE_SET;
   display();
 
+  
   // "The ball is placed on the penalty spot"
-  move_ball_2d(-PENALTY_BALL_X_POS + randomize_pos(), randomize_pos());
-
+  
+ 
+  
+  float x,y;
+  x= randomNoBetween(-2,2) + (float)rand()/RAND_MAX;
+   y = randomNoBetween(-1,1) + (float)rand()/RAND_MAX;
+  printf("Random value : %f, %f\n",x,y);
+  move_ball_2d(  -0.5,0 );
+  
   // attacker and goalie indices during penalties
   int attacker = get_red_robot_index(ATTACKER);
   int goalie = get_blue_robot_index(GOALIE);
   
+
   // move other robots out of the soccer field
-  int i;
+  int i, j = 0;
   for (i = 0; i < MAX_NUM_ROBOTS; i++) {
     if (robots[i] && i != attacker && i != goalie) {
       // preserve elevation to avoid dropping them or putting them through the floor
       double elevation = wb_supervisor_field_get_sf_vec3f(robots[i]->translation)[Y];
-      double out_of_field[3] = { 1.0 * i, elevation, 5.0 };
+      double out_of_field[3] = { 0.0, elevation, 5.0 + j++ };
       wb_supervisor_field_set_sf_vec3f(robots[i]->translation, out_of_field);
     }
   }
-
+ // run_seconds(3);
+    x =0;//randomNoBetween(-1,1) + (float)rand()/RAND_MAX;
+   y = 0;//randomNoBetween(-1,1) + (float)rand()/RAND_MAX;
   // "The attacking robot is positioned at the center of the field, facing the ball"
   // "The goal keeper is placed with feet on the goal line and in the centre of the goal"
-  const double ATTACKER_POS[3] = { randomize_pos(), randomize_pos(), -1.5708 + randomize_angle() };
+  //const double ATTACKER_POS[3] = { x+ randomize_pos(), y+randomize_pos(), -1.5708 + randomize_angle() };
+  const double ATTACKER_POS[3] = { 0,0, -1.5708  };
   const double GOALIE_POS[3] = { -PENALTY_GOALIE_X_POS + randomize_pos(), randomize_pos(), 1.5708 + randomize_angle() };
 
   // hold attacker and goalie for 5 seconds in place during the SET state
   int n;
-  for (n = 5000 / TIME_STEP; n > 0; n--) {
+  //for (n = 5000 / TIME_STEP; n > 0; n--) {
     move_robot_2d(attacker, ATTACKER_POS[0], ATTACKER_POS[1], ATTACKER_POS[2]);
-    move_robot_2d(goalie, GOALIE_POS[0], GOALIE_POS[1], GOALIE_POS[2]);
-    step();
-  }
+   // move_robot_2d(goalie, GOALIE_POS[0], GOALIE_POS[1], GOALIE_POS[2]);
+   // step();
+  //}
 
   // switch to PLAYING state
   control_data.state = STATE_PLAYING;
 
   do {
     // substract TIME_STEP to current time
-    time -= TIME_STEP / 1000.0;
+    Time -= TIME_STEP / 1000.0;
     display();
 
-    if (time < 0.0) {
-      time = 0.0;
+    if (Time < 0.0) {
+      Time = 0.0;
       show_message("TIME OUT!");
       return;
     }
@@ -988,7 +1018,7 @@ static void run_penalty_kick(double delay) {
     step();
   }
   while (is_ball_in_field());
-
+  total_runs = total_runs+1;
   if (is_ball_in_blue_goal()) {
     control_data.teams[TEAM_RED].score++;
     show_message("GOAL!");
@@ -1021,7 +1051,7 @@ static int check_victory(int remaining_attempts) {
 
 static void run_penalty_kick_shootout() {
 
-  show_message("PENALTY KICK SHOOT-OUT!");
+  show_message("LineUp Episode");
   step();
 
   // inform robots of the penalty kick shootout
@@ -1029,15 +1059,17 @@ static void run_penalty_kick_shootout() {
 
   // five penalty shots per team
   int i;
-  for (i = 0; i < 5; i++) {
-    run_penalty_kick(60);
-    if (check_victory(5 - i)) return;
+  for (i = 0; i < 5000; i++) {
+    run_penalty_kick(250);
+    //swap_teams_and_scores();
+  /*if (check_victory(5 - i)) return;
     run_finished_state();
-    swap_teams_and_scores();
+    
     run_penalty_kick(60);
     if (check_victory(4 - i)) return;
     run_finished_state();
     swap_teams_and_scores();
+    */
   }
   
   if (match_type == FINAL) {
@@ -1059,33 +1091,33 @@ static void run_penalty_kick_shootout() {
 int main(int argc, const char *argv[]) {
 
   // init devices and data structures
-  while(1)
-  {
- initialize();
+  initialize();
+
 
   // check controllerArgs
   if (argc > 1 && strcmp(argv[1], "penalty") == 0)
     // run only penalty kicks
     run_penalty_kick_shootout();
   else {
- 
     // first half-time
-  //  control_data.firstHalf = 1;
-   // run_half_time();
-    //run_half_time_break();
+    run_penalty_kick_shootout();
+    
+ /*   control_data.firstHalf = 1;
+    run_half_time();
+    run_half_time_break();
 
     // second half-time
     control_data.firstHalf = 0;
     run_half_time();
 
     // if the game is tied, start penalty kicks
-  //  if (control_data.teams[TEAM_BLUE].score == control_data.teams[TEAM_RED].score)
-    //  run_penalty_kick_shootout();
+    if (control_data.teams[TEAM_BLUE].score == control_data.teams[TEAM_RED].score)
+      run_penalty_kick_shootout();
+      */
   }
-  
 
   // terminate movie, write scores.txt, etc.
   terminate();
-}
+
   return 0; // never reached
 }
