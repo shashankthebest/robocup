@@ -61,8 +61,8 @@ private:
 	
 	int i, j, k;
 	char* runID;
-	char* fileHistory;	
-	char** fileAP;
+	//char* fileHistory;	
+	//char** fileAP;
 	State* TestStates;
 	
 	
@@ -122,27 +122,7 @@ public:
 		
 		///////////    RL Related File handing Stuff
 
-		runID = new char[5];
-		sprintf(runID, "%d",  m_parent->mainP->run);
-		
-		fileHistory = new char[100];	//name of the file for learning history data
-		strcpy(fileHistory,  m_parent->mainP->dir);
-		strcat(fileHistory, "r_");
-		strcat(fileHistory, runID);
-		strcat(fileHistory ,".hst");
-		
-		fileAP  = new char*[Action::count];	//name of files for approximator settings
-		for (i=0; i<Action::count; i++)
-		{
-			fileAP[i] = new char[100];
-			strcpy(fileAP[i],  m_parent->mainP->dir);
-			strcat(fileAP[i], "r_");
-			strcat(fileAP[i],runID);
-			char temp[5];
-			sprintf(temp,".a%d",i);
-			strcat(fileAP[i],temp);
-			
-		}
+	
 		
 		//load test states
 		char c;
@@ -183,9 +163,12 @@ public:
 		
 		ifile.close();
 		
+		//// Load all learned function approximator data into current SFA
+		//m_parent->safa->setAllArchitectureParameters(fileAP);
+		
 		//cout<<"\n\nFile NAme : "<<fileHistory<<"\n\n";
 		
-		ofsHistory.open(fileHistory);	//file stream for saving learning history data
+		ofsHistory.open(m_parent->fileHistory);	//file stream for saving learning history data
 		if (ofsHistory.fail()){
 			cout << "Error: can not open file to save history\n\n" << endl;
 			exit(EXIT_FAILURE);
@@ -261,18 +244,18 @@ public:
 		
 		if (i<= m_parent->mainP->Trials)
 		{
-			cout << "\n\nLearning trial no : "<<i<<"\n\n";;
+			//cout << "\n\nLearning trial no : "<<i<<"\n\n";;
 			i++;                   // Steps in trial, LearnOrNot,  SaveTrajectory?, startingState, fileName4Trajectory, BellmanError? 
 
 			m_parent->agent->stepTrial(true,true,false);
 
-			if(i==20)
-			{
-				Blackboard->Actions->resetSimulation = true;
-				//Blackboard->Actions->add(NUActionatorsData::Teleporter, m_data->GetTimestamp(), sounds);
-			}
-				
-			
+						if ((i%9999==0) || (lostBall) )
+						{ 
+							cout<<"\nSaving Trajectory and all learned parameters\n\n\n";
+							m_parent->agent->saveTrajectory("trajectory.dat");
+							m_parent->safa->saveAllArchitectureParameters(m_parent->fileAP);
+							Blackboard->Actions->resetSimulation = true;
+						}
 			
 			//			steps =  m_parent->agent->initTrial( 1,       true,       true,          NULL,          "trajectory.dat", false); //learning trial
 			/*
@@ -321,8 +304,7 @@ public:
 		}	//end of the learning loop
 		
 		
-		if (saveFA==true && i%200==0) 
-			m_parent->safa->saveAllArchitectureParameters(fileAP);
+
 		
 		
 	}
@@ -424,15 +406,19 @@ public:
 			if (m_time_in_state > 2000)
 			{
 				if (m_current_time - m_field_objects->mobileFieldObjects[FieldObjects::FO_BALL].TimeLastSeen() > 2000)
-					lostBall = true;
+					{
+						lostBall = true;
+					}
+
 			}
 			
-			if( (runCount >5))
+			if( (runCount >20))
 			{
 				if (learnCount%5==0 )
 				{
 					//cout<<"\nLearnCount = "<<learnCount;
 					learnPolicy();
+				
 				}
 				learnCount++;
 				

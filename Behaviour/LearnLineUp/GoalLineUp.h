@@ -27,6 +27,8 @@ class GoalLineUp : public Environment{
 	vector<float> targetPosition;
 	vector<float>currVel;
 	float mixedSpeed;
+	State s_last;
+	unsigned int blindFrameCount;
 	
  public:
 
@@ -38,7 +40,7 @@ class GoalLineUp : public Environment{
   void uniformStateSample(State& s);
 	
 	
-  void makeObservation();
+  void makeObservation(double &);
 
   void startState(State& start, bool& terminal);
   /*	Selects start state according to the uniformly random distribution

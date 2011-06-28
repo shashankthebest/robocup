@@ -202,6 +202,28 @@ void StateActionFA::saveAllArchitectureParameters(char** fileNames){
   delete [] filePar;
 }
 	
+	
+void StateActionFA::setAllArchitectureParameters(char** fileNames){
+
+  char** filePar = new char*[1];
+  filePar[0]=new char[100];
+  int i;
+
+  for (i=0; i<A; i++){
+    if (fa[i]!=NULL)
+    {
+      strcpy(filePar[0],fileNames[i]);
+      fa[i]->setArchitectureParameters(1,filePar);
+    }
+  }
+
+  delete [] filePar[0];
+  delete [] filePar;
+}	
+	
+	
+	
+	
 void StateActionFA::saveArchitectureParameters(const Action& a, int argc, char *argv[])
 		/*	Saves parameters of the architecture corresponding 
 			to a given action.

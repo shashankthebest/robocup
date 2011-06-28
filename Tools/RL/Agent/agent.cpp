@@ -135,15 +135,7 @@ int Agent::initStepWiseTrial(int N, bool learning, bool SaveTrajectory, const St
 	}
 	//trajectoryFile = new String(fileName);
 		
-	file.open(fileName, ios::app);
-		
-    if (file.fail())
-	{ 
-		cout << "Error (agent): cannot open file to save trajectory" << fileName << endl;
-		exit(EXIT_FAILURE);
-	}
-	
-	file << "New trial" << endl;
+
 
 	
 }
@@ -165,20 +157,16 @@ int Agent::stepTrial(bool learning, bool SaveTrajectory, bool ComputeBellmanErro
 		steps=act(1, SaveTrajectory, ComputeBellmanError);
 	}
 	
-	
-	//IMPLEMENT HERE SAVING TRAJECTORY TO A FILE
-	if (SaveTrajectory==true && stepsInTrial>1)
+	//---------------------------------------------------
+	if(stepsInTrial>=2)
 	{
-//		for (i=0; i<trajectory->length-1; i++)
-		{
-			
 			// Which stage
 			cout<< "Stage " << stepsInTrial << ": ";
 			cout << "\t" << trajectory->stage[stepsInTrial-1].state;
 
 			// What are available q values
 			cout << "\t(";
-			for (j=0; j<actions.size; j++)
+			for (int j=0; j<actions.size; j++)
 				cout <<trajectory->stage[stepsInTrial-1].Qvalue[j] << ",";
 			cout << ")";
 			
@@ -190,37 +178,67 @@ int Agent::stepTrial(bool learning, bool SaveTrajectory, bool ComputeBellmanErro
 			
 			// What is current TD error
 			cout << "\t" << trajectory->stage[stepsInTrial-1].TDerror << endl;
+	}
+	
+	//------------------------
+	
+	
+	
+	stepsInTrial++;
+	return stepsInTrial;
+	
+}
+
+
+void Agent::saveTrajectory(char* fileName )
+{
+	
+		file.open(fileName, ios::app);
+		
+		if (file.fail())
+		{ 
+			cout << "Error (agent): cannot open file to save trajectory" << fileName << endl;
+			exit(EXIT_FAILURE);
+		}
+	
+		file << "New trial" << endl;
+
+		cout<<"\nSaving Trajectory histroy!\n\n";
+		for (stepsInTrial=0; stepsInTrial<trajectory->length-1; stepsInTrial++)
+		{
+			
+	
 			
 			
 			file << "Stage " << stepsInTrial << ": ";
-			file << "\t" << trajectory->stage[stepsInTrial-1].state;
+			file << "\t" << trajectory->stage[stepsInTrial].state;
 			if (file.fail())
 			{
 				cout << "Error (agent): saving trajectory" << endl;
 				exit(EXIT_FAILURE);
 			} 
 			
-			if (learning)
+			if (true)
 			{
 				file << "\n\t(";
-				for (j=0; j<actions.size; j++)
-					file <<trajectory->stage[stepsInTrial-1].Qvalue[j] << ",";
+				for (int j=0; j<actions.size; j++)
+					file <<trajectory->stage[stepsInTrial].Qvalue[j] << ",";
 				file << ")";
 			}
-			file << "\t" << trajectory->stage[stepsInTrial-1].action;
+			file << "\t" << trajectory->stage[stepsInTrial].action;
 			if (file.fail())
 			{
 				cout << "Error (agent): saving trajectory" << endl;
 				exit(EXIT_FAILURE);
 			}
 			
-			file << "\t" << trajectory->stage[stepsInTrial-1].reward;
+			file << "\t" << trajectory->stage[stepsInTrial].reward;
 			if (file.fail())
 			{
 				cout << "Error (agent): saving trajectory" << endl;
 				exit(EXIT_FAILURE);
 			}
-			file << "\t" << trajectory->stage[stepsInTrial-1].TDerror << endl;
+			file << "\t" << trajectory->stage[stepsInTrial].TDerror << endl;
 			
 		}
 	
@@ -238,13 +256,9 @@ int Agent::stepTrial(bool learning, bool SaveTrajectory, bool ComputeBellmanErro
 		file << "Return=" << Return << endl;
 		 
 		//delete trajectory;
-		 
-		 
-	}
-	stepsInTrial++;
-	return stepsInTrial;
-	
+
 }
+	
 
 
 void Agent::endStepTrial()

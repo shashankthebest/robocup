@@ -154,13 +154,12 @@ cout<<"\n\nSize of Action Set = "<<actionSet.size;
 ////////////////       Defining the environment
   mdp = new GoalLineUp();
   env = mdp;
-  
-  
 
 ///////////////   Set up function approximator
   cmacSet = new Approximator*[Action::count];
   
-
+	
+	
 //////////// Set up state space bounds
   left = new double[State::dimensionality];
   right = new double[State::dimensionality];
@@ -185,7 +184,37 @@ cout<<"\n\nSize of Action Set = "<<actionSet.size;
   } 
 
   safa = new StateActionFA(Action::count, cmacSet);
- 
+
+	runID = new char[5];
+	sprintf(runID, "%d",  mainP->run);
+		
+		fileHistory = new char[100];	//name of the file for learning history data
+		strcpy(fileHistory,  mainP->dir);
+		strcat(fileHistory, "r_");
+		strcat(fileHistory, runID);
+		strcat(fileHistory ,".hst");
+		
+		fileAP  = new char*[Action::count];	//name of files for approximator settings
+		for (int i=0; i<Action::count; i++)
+		{
+			fileAP[i] = new char[100];
+			strcpy(fileAP[i],  mainP->dir);
+			strcat(fileAP[i], "r_");
+			strcat(fileAP[i],runID);
+			char temp[5];
+			sprintf(temp,".a%d",i);
+			strcat(fileAP[i],temp);
+			
+		}
+
+	safa->setAllArchitectureParameters(fileAP);
+
+
+
+
+
+
+  
   
 
 //////////////  Setup Agent

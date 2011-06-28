@@ -8,7 +8,7 @@
 
 #include "GoalLineUp.h"
 
-#define TARGET_THETA 0
+#define TARGET_THETA 180
 
 
 #include "Infrastructure/Jobs/JobList.h"
@@ -45,12 +45,13 @@ GoalLineUp::GoalLineUp(	):Environment(),currPos(3,0.0f),kickPosition(2,0),target
 				Initializes state according to start state distribution
 			*/
 		bool t;
-		CurrentState.x = new double[3];
+		CurrentState.x = new double[4];
 		startState(CurrentState, t);
 		reward=-1;
 		transVel = 0;
 		dirTheta = 0; 
 		rotVel = 0;
+		blindFrameCount = 0;
 }
 
 
@@ -66,10 +67,12 @@ void GoalLineUp::startState(State& start, bool& terminal)
 			*/
 	//CurrentState.x[0]=-1.2+(double)rand()/((double)RAND_MAX)*1.7;	//random number in [-1.2, 0.5] - car's position
 	//CurrentState.x[1]=-0.07+(double)rand()/((double)RAND_MAX)*0.14;//random number in [-0.07,0.07]- car's velocity
-	CurrentState.x[0] = 0;
-	CurrentState.x[1] = 0;
-	CurrentState.x[2] = 0;
-	//CurrentState.x[3] = 0;
+	//CurrentState.x[0] = 0;
+	//CurrentState.x[1] = 0;
+	//CurrentState.x[2] = 0;
+	//CurrentState.x[3] = 1;
+	double reward;
+	makeObservation(reward);
 	start=CurrentState;
 	terminal = false;
 	Stages=1;
@@ -95,7 +98,7 @@ void GoalLineUp::setState(const State& s, bool& terminal)
 	Stages=1;
 }
 
-void GoalLineUp::makeObservation()
+void GoalLineUp::makeObservation(double &reward)
 {
 
 	measureddistance = 0;
@@ -124,17 +127,40 @@ void GoalLineUp::makeObservation()
 	Blackboard->Sensors->get(NUSensorsData::MotionWalkSpeed,currVel);
 	mixedSpeed = currVel[0]*currVel[1];
 	
-	CurrentState.x[0] = ball.estimatedDistance();
-	CurrentState.x[1] = currPos[2];
-	CurrentState.x[2] = mixedSpeed;
+	if(ball.estimatedDistance() >= 120)
+		CurrentState.x[0] = 120;
+	else
+		CurrentState.x[0] = ball.estimatedDistance();
+		
+	CurrentState.x[1] = mathGeneral::rad2deg(currPos[2]);
+	if (mixedSpeed > 1)
+		mixedSpeed = 1;
+	else
+		CurrentState.x[2] = mixedSpeed;
 	
 	if (Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].isObjectVisible())
+	{
 		CurrentState.x[3] = 1;
+		if(blindFrameCount>0)
+			blindFrameCount--;
+	}
 	else 
 	{
+		CurrentState.x[1] = s_last.x[1];  // if ball is not visible, donot decrease its distance from robot
 		CurrentState.x[3] = 0;
+		cout<<"\nI cannot see the ball!";
 	}
 
+	if(checkTerminal())
+		reward = 10;
+	else if(CurrentState.x[3]==0)
+	{
+			reward = -10;
+	}
+	else if( (s_last.x[1] - CurrentState.x[1])>1)
+		reward = 1;
+	else 
+		reward = -5;
 	
 	
 }
@@ -144,14 +170,17 @@ bool GoalLineUp::checkTerminal()
 {
 	//m_current_position = m_field_objects->self.wmState();
 	bool retVal = false;
-	makeObservation();
+	//makeObservation();
 	if (Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].isObjectVisible())  
 	{
-		if (balldistance <= 20 )
+		if (CurrentState.x[0] <=20)
 		{
-			if((mixedSpeed < 0.1) && currVel[2]<0.02 )
+			if( fabs(CurrentState.x[1]-TARGET_THETA) <2 )
 			{
-				retVal = true;
+				if ( fabs(CurrentState.x[2]) <= 0.2 )
+				  {
+						retVal = true;
+				  }
 			}
 		}
 		else 
@@ -159,7 +188,6 @@ bool GoalLineUp::checkTerminal()
 			retVal = false;
 		}
 
-		
 	}
 	else 
 	{
@@ -194,7 +222,7 @@ void GoalLineUp::transition(const Action& action, State& s_new, double& r_new, b
 
 		//new state and reward:
 
-		State s_last = CurrentState;
+		s_last = CurrentState;
 		double temp;
 		
 
@@ -220,13 +248,13 @@ void GoalLineUp::transition(const Action& action, State& s_new, double& r_new, b
 		}
 		else if (action.value == 3)  // Increase Angle
 		{
-			if (dirTheta < mathGeneral::deg2rad(180))
+			if (fabs(dirTheta) < mathGeneral::deg2rad(180))
 				dirTheta += mathGeneral::deg2rad(2);						
 		}
 		else if (action.value == 4)  // Decrease Angle
 		{
-			if (dirTheta > mathGeneral::deg2rad(-180))
-				dirTheta -= mathGeneral::deg2rad(2);									
+			if (fabs(dirTheta) > mathGeneral::deg2rad(-180))
+				dirTheta -= mathGeneral::deg2rad(1);									
 		}
 		else if (action.value == 5)	 // Increase Rotational Velocity
 		{
@@ -235,7 +263,7 @@ void GoalLineUp::transition(const Action& action, State& s_new, double& r_new, b
 		}
 		else if (action.value == 6)	 // Decrease Rotational Velocity
 		{
-			if (rotVel > mathGeneral::deg2rad(-180))
+			if (rotVel > -mathGeneral::deg2rad(180))
 				rotVel -= mathGeneral::deg2rad(1);				
 		}
 		
@@ -246,14 +274,15 @@ void GoalLineUp::transition(const Action& action, State& s_new, double& r_new, b
 		Blackboard->Jobs->addMotionJob(walk);
 
 		
-		if(checkTerminal())  // Makes observation and checks for terminal state
+	/*	if(checkTerminal())  // Makes observation and checks for terminal state
 		{
 			reward = 10;
 			cout<<"\n\n\nReturned +ve reward\n\n";
 		}
 		else 
 			reward = -1;
-		
+		*/
+		makeObservation(reward);
 		
 		/*
 		
@@ -315,7 +344,7 @@ void GoalLineUp::bound(int i, bool& bounded, double& left, double& right)
 	bounded=true;
 	if (i==0) 
 	{	
-		left = 0;
+		left = -1;
 		right= 120;
 		return;
 	}

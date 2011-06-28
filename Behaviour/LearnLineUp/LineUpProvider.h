@@ -59,6 +59,9 @@ private:
     
     void setupRlEngine();
     
+    
+  
+    
 public:
     LineUpState* m_generate;        //!< New parameters for episode evaluation are generated
     LineUpState* m_evaluate;        //!< After execution of episode, evaluation is performed
@@ -78,6 +81,10 @@ public:
     float targetY;
     OccupancyGridMap *m_globalMap;
     ofstream locAcc;
+    
+      char* runID;
+	char* fileHistory;	
+	char** fileAP;
     
     /////////////////////////////////// RL Related
     GoalLineUp* mdp;          // Environment

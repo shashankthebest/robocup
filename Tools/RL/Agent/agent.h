@@ -41,7 +41,7 @@ public:
 	
 	void endStepTrial();
 	int stepTrial(bool learning, bool SaveTrajectory, bool );
-	
+	void saveTrajectory(char* fileName );
 	
 	double getReturn();
 	/* Gets return collected during the last trial

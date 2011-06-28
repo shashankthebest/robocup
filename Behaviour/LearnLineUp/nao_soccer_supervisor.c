@@ -953,7 +953,7 @@ static void run_penalty_kick(double delay) {
   x= randomNoBetween(-2,2) + (float)rand()/RAND_MAX;
    y = randomNoBetween(-1,1) + (float)rand()/RAND_MAX;
   printf("Random value : %f, %f\n",x,y);
-  move_ball_2d(  -0.5,0 );
+  move_ball_2d(  -0.75,0 );
   
   // attacker and goalie indices during penalties
   int attacker = get_red_robot_index(ATTACKER);
@@ -1060,7 +1060,7 @@ static void run_penalty_kick_shootout() {
   // five penalty shots per team
   int i;
   for (i = 0; i < 5000; i++) {
-    run_penalty_kick(250);
+    run_penalty_kick(5250);
     //swap_teams_and_scores();
   /*if (check_victory(5 - i)) return;
     run_finished_state();

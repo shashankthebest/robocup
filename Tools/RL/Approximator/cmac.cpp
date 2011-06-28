@@ -375,14 +375,14 @@ void CMAC::Tiling::saveParameters(ofstream& file){
   */
   int i;
 
-  file << "Number of tiles: " << N << endl;
+  file << "Number of tiles: " << N << endl;                   // Total No of tiles
   if (file.fail())
   {
     cout << "Error (tiling): disk is full " << endl;
     exit(EXIT_FAILURE);
   }
 
-  file << "Number of tiles along each dimension: " << endl;
+  file << "Number of tiles along each dimension: " << endl;   // No of tiles along each dimension
   if (file.fail())
   {
     cout << "Error (tiling): disk is full " << endl;
@@ -391,7 +391,7 @@ void CMAC::Tiling::saveParameters(ofstream& file){
 
   for(i=0; i<State::dimensionality; i++)
   {
-    file << n[i] << "    ";
+    file << n[i] << "    ";									// No of tiles along each dimension
     if (file.fail()){
       cout << "Error (tiling): disk is full " << endl;
       exit(EXIT_FAILURE);
@@ -399,14 +399,14 @@ void CMAC::Tiling::saveParameters(ofstream& file){
   }
   file << endl;
 
-  file << "Tiles' width along each dimension: " << endl;
+  file << "Tiles' width along each dimension: " << endl;	// Tiles width along each dimension
   if (file.fail())
   {
     cout << "Error (tiling): disk is full " << endl;
     exit(EXIT_FAILURE);
   }
 
-  for(i=0; i<State::dimensionality; i++)
+  for(i=0; i<State::dimensionality; i++)					// Tiles width along each dimension
   {
     file << h[i] << "    ";
     if (file.fail()){
@@ -416,14 +416,14 @@ void CMAC::Tiling::saveParameters(ofstream& file){
   }
   file << endl;
 
-  file << "Origin of the tiling: " << endl;
+  file << "Origin of the tiling: " << endl;					// Origion of tiling for each dimension
   if (file.fail())
   {
     cout << "Error (tiling): disk is full " << endl;
     exit(EXIT_FAILURE);
   }
 
-  for(i=0; i<State::dimensionality; i++)
+  for(i=0; i<State::dimensionality; i++)					// Origion of tiling for each dimension
   {
     file << origin[i] << "    ";
     if (file.fail()){
@@ -433,7 +433,7 @@ void CMAC::Tiling::saveParameters(ofstream& file){
   }
   file << endl;
 	
-  file << "Tiles' parameters: " << endl;
+  file << "Tiles' parameters: " << endl;					// Tile parameters
   if (file.fail())
   {
     cout << "Error (tiling): disk is full " << endl;
@@ -441,7 +441,7 @@ void CMAC::Tiling::saveParameters(ofstream& file){
   }
   for(i=0; i<N; i++)
   {
-    file << tiles[i].w << endl;
+    file << tiles[i].w << endl;					// Tile parameters
     if (file.fail())
     {
       cout << "Error (tiling): disk is full " << endl;
@@ -781,13 +781,13 @@ void CMAC::setArchitectureParameters(int argc, char *argv[])
 
  if (argc==0){
    cout << "No file name to read data." << endl;
-   exit(EXIT_SUCCESS);
+   return;
  }
 	
  ifstream file(argv[0]);
  if (file.fail()){
    cout << "Error (cmac): cannot open file " << argv[0] << endl;
-   exit(EXIT_FAILURE);
+   return;
  }
 	
  char buffer[40];
@@ -800,15 +800,19 @@ void CMAC::setArchitectureParameters(int argc, char *argv[])
  int t;
 	
  file >> t;
+			
+			cout<<"\nObtained total number of tilings : "<<t;
+			
  if (file.fail()){
    cout << "Error (cmac): input failed (2)" << endl;
    exit(EXIT_FAILURE);
  }
 
- if (t!=T){
+ if (t!=T)  // if current total number of tilings is not same as the ones obtained from file
+ {
    delete [] tilings;
    T=t;
-   tilings = new Tiling[T];
+   tilings = new Tiling[T];   // make new tilings with the total number obtained from file
  }
 
  for(i=0; i<T; i++){

@@ -99,6 +99,8 @@ public:
 	
 	void saveAllArchitectureParameters(char** fileNames);
 	
+	void setAllArchitectureParameters(char** fileNames);
+	
 	void setLearningParameters(const Action& a, int argc, char *argv[]);
 	/* Sets learning parameters of the architecture corresponding to a given action.
      a : action
