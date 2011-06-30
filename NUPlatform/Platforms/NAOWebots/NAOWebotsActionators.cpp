@@ -167,10 +167,12 @@ void NAOWebotsActionators::copyToTeleporter()
 #if DEBUG_NUACTIONATORS_VERBOSITY > 4
     debug << "NAOWebotsActionators::copyToTeleporter()" << endl;
 #endif 
-	if(m_data->resetSimulation)
+	static bool sent = false;
+	if(m_data->resetSimulation && !sent)
 	{
 		static char buf[256];
 		sprintf(buf, "reset");
+		sent = true;
 		m_teleporter->send(buf, strlen(buf) + 1);
 	}
 

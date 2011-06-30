@@ -52,7 +52,7 @@ public:
     const static id_t Sound;
     const static id_t Teleporter;
 	bool resetSimulation;
-	bool canISeeBall;
+	bool restartCondition;
 public:
     NUActionatorsData();
     ~NUActionatorsData();
