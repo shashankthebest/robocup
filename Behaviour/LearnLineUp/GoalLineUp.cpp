@@ -166,6 +166,7 @@ void GoalLineUp::makeObservation(double &reward)
 
 	if(checkTerminal())
 		reward = 10;
+
 	else if ( ( fabs(oldBallPos[1] - ballPos[1]) > 2 ) ||  ( fabs(oldBallPos[2] - ballPos[2]) > 2 ) )
 	{
 		cout<<"\nBall moved, restarting with negative reward!";
@@ -173,6 +174,7 @@ void GoalLineUp::makeObservation(double &reward)
 		Blackboard->Actions->restartCondition = true;
 		
 	}
+
 	else if(CurrentState.x[3]==0 ||  !(Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].isObjectVisible()))
 	{
 			reward = -10;
@@ -188,7 +190,6 @@ void GoalLineUp::makeObservation(double &reward)
 		cout<<"\nReturning heavy -ve reward!\n\n";
 		reward = -10;
 		//Blackboard->Actions->restartCondition = true;
-		
 	}
 	else 
 		reward = -1;

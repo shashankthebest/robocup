@@ -203,7 +203,7 @@ void Agent::saveTrajectory(char* fileName )
 	
 		file << "New trial" << endl;
 
-		cout<<"\nSaving Trajectory histroy!\n\n";
+		cout<<"\nSaving Trajectory history!\n\n";
 		for (stepsInTrial=0; stepsInTrial<trajectory->length-1; stepsInTrial++)
 		{
 			
