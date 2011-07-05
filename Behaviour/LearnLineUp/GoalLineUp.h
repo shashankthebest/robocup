@@ -25,6 +25,8 @@ class GoalLineUp : public Environment{
 	float ballbearing;
 	vector<float> kickPosition;
 	vector<float> targetPosition;
+	vector<float> ballPos;
+	vector<float> oldBallPos;	
 	vector<float>currVel;
 	float mixedSpeed;
 	State s_last;

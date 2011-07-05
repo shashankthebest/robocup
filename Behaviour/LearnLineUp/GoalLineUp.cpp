@@ -8,7 +8,7 @@
 
 #include "GoalLineUp.h"
 
-#define TARGET_THETA 180
+#define TARGET_THETA -180
 
 
 #include "Infrastructure/Jobs/JobList.h"
@@ -38,7 +38,7 @@
 
 //	IMPLEMENTATION OF Environment class for mountain car task
 
-GoalLineUp::GoalLineUp(	):Environment(),currPos(3,0.0f),kickPosition(2,0),targetPosition(2,0),currVel(3,0.0f)
+GoalLineUp::GoalLineUp(	):Environment(),currPos(3,0.0f),kickPosition(2,0),targetPosition(2,0),currVel(3,0.0f), ballPos(2,0.0f), oldBallPos(2,0.0f)
 {
 
 			/*	Default constructor.
@@ -100,15 +100,28 @@ void GoalLineUp::setState(const State& s, bool& terminal)
 
 void GoalLineUp::makeObservation(double &reward)
 {
-
+	static bool firstCall = true;
+	
+	
+	
 	measureddistance = 0;
 	balldistance = 0;
 	ballbearing = 0;
 	compass = 0;
 	mixedSpeed = 0;
 	
+
+	
 	Blackboard->Sensors->getCompass(compass );
 	currPos[2] = compass;
+	
+	Blackboard->Sensors->getBallGps(ballPos);
+	if(firstCall)
+	{
+		firstCall = false;
+		oldBallPos = ballPos;
+	}
+	
 	
 	bool retVal = false;
 	
@@ -146,21 +159,39 @@ void GoalLineUp::makeObservation(double &reward)
 	}
 	else 
 	{
-		CurrentState.x[1] = s_last.x[1];  // if ball is not visible, donot decrease its distance from robot
+		CurrentState.x[0] = s_last.x[0];  // if ball is not visible, donot decrease its distance from robot
 		CurrentState.x[3] = 0;
 		cout<<"\nI cannot see the ball!";
 	}
 
 	if(checkTerminal())
 		reward = 10;
-	else if(CurrentState.x[3]==0)
+	else if ( ( fabs(oldBallPos[1] - ballPos[1]) > 2 ) ||  ( fabs(oldBallPos[2] - ballPos[2]) > 2 ) )
+	{
+		cout<<"\nBall moved, restarting with negative reward!";
+		reward = -10;
+		Blackboard->Actions->restartCondition = true;
+		
+	}
+	else if(CurrentState.x[3]==0 ||  !(Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].isObjectVisible()))
 	{
 			reward = -10;
+			cout<<"\nReturning heavy -ve reward!\n\n";
 	}
-	else if( (s_last.x[1] - CurrentState.x[1])>1)
-		reward = 1;
+	else if( (s_last.x[0] - CurrentState.x[0])>1)
+		reward = 0.5;
+	else if ( (CurrentState.x[0] - s_last.x[0])>1)
+		reward = -1;
+	else if ( CurrentState.x[0] < 20 && 
+	          (    ( fabs(transVel) <= 0.2) && (fabs(rotVel) <= mathGeneral::deg2rad(2) ) ) ) //// if reached ball but still walking
+	{
+		cout<<"\nReturning heavy -ve reward!\n\n";
+		reward = -10;
+		//Blackboard->Actions->restartCondition = true;
+		
+	}
 	else 
-		reward = -5;
+		reward = -1;
 	
 	
 }
@@ -177,7 +208,7 @@ bool GoalLineUp::checkTerminal()
 		{
 			if( fabs(CurrentState.x[1]-TARGET_THETA) <2 )
 			{
-				if ( fabs(CurrentState.x[2]) <= 0.2 )
+				if (    ( fabs(transVel) <= 0.2) && (fabs(rotVel) <= mathGeneral::deg2rad(2) )  )
 				  {
 						retVal = true;
 				  }
@@ -238,33 +269,33 @@ void GoalLineUp::transition(const Action& action, State& s_new, double& r_new, b
 		if (action.value == 1 ) // Increase Translation velocity
 		{
 			if ( transVel <1)
-				transVel += 0.1;
+				transVel += 0.25;
 				
 		}
 		else if (action.value == 2)  // Decrease Translation velocity
 		{
 			if (transVel >0)
-				transVel -= 0.1;			
+				transVel -= 0.25;			
 		}
 		else if (action.value == 3)  // Increase Angle
 		{
 			if (fabs(dirTheta) < mathGeneral::deg2rad(180))
-				dirTheta += mathGeneral::deg2rad(2);						
+				dirTheta += mathGeneral::deg2rad(10);						
 		}
 		else if (action.value == 4)  // Decrease Angle
 		{
 			if (fabs(dirTheta) > mathGeneral::deg2rad(-180))
-				dirTheta -= mathGeneral::deg2rad(1);									
+				dirTheta -= mathGeneral::deg2rad(10);									
 		}
 		else if (action.value == 5)	 // Increase Rotational Velocity
 		{
-			if (rotVel < mathGeneral::deg2rad(180))
-				rotVel += mathGeneral::deg2rad(1);				
+			if (rotVel < 1)
+				rotVel += 0.1;
 		}
 		else if (action.value == 6)	 // Decrease Rotational Velocity
 		{
-			if (rotVel > -mathGeneral::deg2rad(180))
-				rotVel -= mathGeneral::deg2rad(1);				
+			if (rotVel > 0)
+				rotVel -= 0.1;				
 		}
 		
 		//cout<<" [ "<<CurrentState.x[0]<<", "<<CurrentState.x[1]<<", "<<CurrentState.x[2]<<" ] ";
@@ -328,7 +359,7 @@ bool GoalLineUp::applicable(const State& s, const Action& a)
 				retVal = true;
 		else if (aVal==3  && (dirTheta < mathGeneral::deg2rad(180) ))
 				retVal = true;
-		else if (aVal==4  && (dirTheta > mathGeneral::deg2rad(-180) ))
+		else if (aVal==4  && (dirTheta > mathGeneral::deg2rad(0) ))
 				retVal = true;		
 		else if (aVal==5  && (rotVel  < 1 ))
 				retVal = true;						

@@ -147,6 +147,11 @@ void LineUpProvider::setupRlEngine()
   actionSet.addAction(a5);
   Action a6("decRot", 6);
   actionSet.addAction(a6);
+ // Action a7("incMultiplier",7);
+  //actionSet.addAction(a7);
+  //Action a8("decMultiplier",7);
+  //actionSet.addAction(a7);
+	
 
 cout<<"\n\nSize of Action Set = "<<actionSet.size;
 

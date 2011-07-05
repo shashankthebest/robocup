@@ -64,7 +64,7 @@ private:
 	//char* fileHistory;	
 	//char** fileAP;
 	State* TestStates;
-	
+	bool restartCondition;
 	
 	double avrTR; //averrage test return (over many trajectories from each test state)
 	double avrTRS; //average test return per step (over many trajectories from each test state)
@@ -119,6 +119,7 @@ public:
         lostBall = false;
 		runCount = 0;
 		i = 0;
+		restartCondition = false;
 		
 		///////////    RL Related File handing Stuff
 
@@ -249,11 +250,16 @@ public:
 
 			m_parent->agent->stepTrial(true,true,false);
 
-						if ((i%9999==0) || (lostBall) )
+						if ((i%9999==0) || (lostBall) || (Blackboard->Actions->restartCondition) )
 						{ 
-							cout<<"\nSaving Trajectory and all learned parameters\n\n\n";
-							m_parent->agent->saveTrajectory("trajectory.dat");
-							m_parent->safa->saveAllArchitectureParameters(m_parent->fileAP);
+							if(i>20)
+							{
+								cout<<"\nSaving Trajectory and all learned parameters\n\n\n";
+								m_parent->agent->saveTrajectory("trajectory.dat");
+								m_parent->safa->saveAllArchitectureParameters(m_parent->fileAP);
+							}
+							else
+								cout<<"\nRestarting simulation without saving! Not enough information to save!";
 							Blackboard->Actions->resetSimulation = true;
 						}
 			
@@ -379,8 +385,7 @@ public:
 				float trans_speed = 1;
 				float trans_direction = ballbearing;
 				float yaw = ballbearing/2;
-				
-				
+
 				
 				m_jobs->addMotionJob(new HeadTrackJob(ball));
 //				
@@ -414,7 +419,7 @@ public:
 			
 			if( (runCount >20))
 			{
-				if (learnCount%5==0 )
+				if (learnCount%10==0 )
 				{
 					//cout<<"\nLearnCount = "<<learnCount;
 					learnPolicy();
