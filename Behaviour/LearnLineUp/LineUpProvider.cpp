@@ -113,7 +113,7 @@ void LineUpProvider::setupRlEngine()
 
 /////////////  Parameters for RL agent
   mainP = new MainParameters();
-  char* params[] = {"Trials=10000","steps=1","str=cmac.unx","tf=5000","tsn=1","tsf=teststates.dat","ts=1","dir=learnData"};
+  char* params[] = {"Trials=100","steps=1","str=cmac.unx","tf=5000","tsn=1","tsf=teststates.dat","ts=1","dir=learnData"};
   mainP->process(8,params);
 
 	
@@ -132,21 +132,23 @@ void LineUpProvider::setupRlEngine()
  
   //state space and actions for the mountain car task
 	
-  State::dimensionality=4;
+  State::dimensionality = 5;
 
-  ActionSet actionSet(6); // incTrans, decTrans, incDir, decDir, incRot, decRot
-  Action a1("incTrans", 1.0);
+  ActionSet actionSet(4); // incTrans, decTrans, incDir, decDir, incRot, decRot
+  Action a1("incTrans", 1);
   actionSet.addAction(a1);
   Action a2("decTrans", 2 );
   actionSet.addAction(a2);
-  Action a3("incDir", 3);
+  Action a3("decRot", 3);
   actionSet.addAction(a3);
-  Action a4("decDir", 4);
+  Action a4("incRot", 4);
   actionSet.addAction(a3);
-  Action a5("incRot", 5);
+
+	/*Action a5("incRot", 5);
   actionSet.addAction(a5);
   Action a6("decRot", 6);
   actionSet.addAction(a6);
+	 */
  // Action a7("incMultiplier",7);
   //actionSet.addAction(a7);
   //Action a8("decMultiplier",7);

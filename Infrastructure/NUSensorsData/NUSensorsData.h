@@ -76,6 +76,8 @@ public:
     // gps sensors
     const static id_t Gps;
     const static id_t Compass;
+    // ball sensor - webots only
+    const static id_t BallGps;	
     // battery sensors
     const static id_t BatteryVoltage;
     const static id_t BatteryCurrent;
@@ -176,6 +178,8 @@ public:
     bool getCompass(float& data);
     bool getDistance(const id_t& id, vector<vector<float> >& data);
     
+    bool getBallGps(vector<float>& data);
+	
     bool getButton(const id_t& id, float& data);
     bool getButtonDuration(const id_t& id, float& data);
     

@@ -130,8 +130,9 @@ protected:
 	
 	virtual int stepActAndLearn(int N, bool SaveTrajectory)=0;
 	
+	virtual int stepAct(int N, bool SaveTrajectory, bool ComputeBellmanError)=0;
 	
-	virtual void chooseAction(const State& s, Action& a) =0 ;
+	virtual void chooseAction(const State& s, Action& a, bool) =0 ;
 	/* Implements behavior policy
      Uses fa - representation of the random policy or the action value functions 
      s : state in which the action should be performed

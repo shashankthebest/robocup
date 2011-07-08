@@ -56,6 +56,7 @@ private:
 	bool canKick;
 	bool kicked;
 	bool lostBall;
+	unsigned int episodeNumber;
 
 	// Rl related
 	
@@ -120,6 +121,25 @@ public:
 		runCount = 0;
 		i = 0;
 		restartCondition = false;
+		
+		ifstream runInfo("runInfo.dat");
+		runInfo >> episodeNumber;
+		
+		if (runInfo.fail())
+		{
+			cout << "Error: input failed, cannot read episodeNumber" << endl;
+			exit(EXIT_FAILURE);
+		}
+		runInfo.close();
+		
+		cout<<"\n\n\n\n\nThis episode number : "<<episodeNumber<<"\n\n\n\n";
+		
+		
+		
+		ofstream runInfoOut("runInfo.dat");
+		runInfoOut<<++episodeNumber;
+		runInfoOut.close();
+		
 		
 		///////////    RL Related File handing Stuff
 
@@ -243,7 +263,7 @@ public:
 	void learnPolicy()
 	{
 		
-		if (i<= m_parent->mainP->Trials)
+		if (episodeNumber<= m_parent->mainP->Trials)
 		{
 			//cout << "\n\nLearning trial no : "<<i<<"\n\n";;
 			i++;                   // Steps in trial, LearnOrNot,  SaveTrajectory?, startingState, fileName4Trajectory, BellmanError? 
@@ -252,62 +272,96 @@ public:
 
 						if ((i%9999==0) || (lostBall) || (Blackboard->Actions->restartCondition) )
 						{ 
-							if(i>20)
+							//if(i>20)
 							{
 								cout<<"\nSaving Trajectory and all learned parameters\n\n\n";
 								m_parent->agent->saveTrajectory("trajectory.dat");
 								m_parent->safa->saveAllArchitectureParameters(m_parent->fileAP);
 							}
-							else
-								cout<<"\nRestarting simulation without saving! Not enough information to save!";
+						//	else
+						//		cout<<"\nRestarting simulation without saving! Not enough information to save!";
 							Blackboard->Actions->resetSimulation = true;
 						}
 			
 			//			steps =  m_parent->agent->initTrial( 1,       true,       true,          NULL,          "trajectory.dat", false); //learning trial
 			/*
-			if ((i% m_parent->mainP->TestFrequency)==0)                  // after few episodes, the agent is tested. This happnes at specified frequency
-			{ //testing current policy
-				avrTR=0;
-				avrTRS=0;
-				for(k=0; k< m_parent->mainP->TestSamples; k++)
-				{	
-					sampleTR=0;
-					sampleTRS=0;
-					for(j=0; j< m_parent->mainP->TestStatesNumber; j++)
-					{
-						steps = m_parent->agent->initTrial(m_parent->mainP->Steps, false, false, &(TestStates[j]), NULL,false);
-						sampleTR += m_parent->agent->getReturn();
-						if (steps!=0)
-							sampleTRS += m_parent->agent->getReturn()/(double)steps;
-					}
-					sampleTR/=(double)(m_parent->mainP->TestStatesNumber);
-					sampleTRS/=(double)(m_parent->mainP->TestStatesNumber);
-					avrTR += sampleTR;
-					avrTRS += sampleTRS;
-				}
-				
-				avrTR/=(double)(m_parent->mainP->TestSamples);
-				avrTRS/=(double)(m_parent->mainP->TestSamples);
-				
-				m_parent->safa->getMaxParameterChange(MaxParameterChanges);
-				m_parent->safa->getNumberParametersChanged(NumberParametersChanged);
-				
-				ofsHistory << i << "\t" << avrTR << "\t" << avrTRS;
-				for(j=0; j<Action::count; j++)
-				{
-					ofsHistory << "\t" << MaxParameterChanges[j] << "\t" << NumberParametersChanged[j];
-				}
-				
-				ofsHistory << endl;
-				if (ofsHistory.fail())
-				{
-					cout << "Error writing history after " << i << " learning trials" << endl;
-					exit(EXIT_FAILURE);
-				}
-			} //end of testing
+			
 			*/
 			
 		}	//end of the learning loop
+		else // Test what has been learned
+		{
+			static int run=0;
+			if(run<1000)
+			{
+				//if ((i% m_parent->mainP->TestFrequency)==0)                  // after few episodes, the agent is tested. This happnes at specified frequency
+				
+				/*{ //testing current policy
+					avrTR=0;
+					avrTRS=0;
+					for(k=0; k< m_parent->mainP->TestSamples; k++)
+					{	
+						sampleTR=0;
+						sampleTRS=0;
+						for(j=0; j< m_parent->mainP->TestStatesNumber; j++)
+						{
+							steps = m_parent->agent->initTrial(m_parent->mainP->Steps, false, false, &(TestStates[j]), NULL,false);
+							sampleTR += m_parent->agent->getReturn();
+							if (steps!=0)
+								sampleTRS += m_parent->agent->getReturn()/(double)steps;
+						}
+						sampleTR/=(double)(m_parent->mainP->TestStatesNumber);
+						sampleTRS/=(double)(m_parent->mainP->TestStatesNumber);
+						avrTR += sampleTR;
+						avrTRS += sampleTRS;
+					}
+					
+					avrTR/=(double)(m_parent->mainP->TestSamples);
+					avrTRS/=(double)(m_parent->mainP->TestSamples);
+					
+					m_parent->safa->getMaxParameterChange(MaxParameterChanges);
+					m_parent->safa->getNumberParametersChanged(NumberParametersChanged);
+					
+					ofsHistory << i << "\t" << avrTR << "\t" << avrTRS;
+					for(j=0; j<Action::count; j++)
+					{
+						ofsHistory << "\t" << MaxParameterChanges[j] << "\t" << NumberParametersChanged[j];
+					}
+					
+					ofsHistory << endl;
+					if (ofsHistory.fail())
+					{
+						cout << "Error writing history after " << i << " learning trials" << endl;
+						exit(EXIT_FAILURE);
+					}
+				} //end of testing
+				*/
+				i++;
+				
+				
+				m_parent->agent->stepTrial(false,false,true);
+				
+				if ((i%9999==0) || (lostBall) || (Blackboard->Actions->restartCondition) )
+				{
+					cout<<"\nRestarting simulation after completeing testing!";
+					ofstream runInfoOut("runInfo.dat");
+					runInfoOut<<0;
+					runInfoOut.close();
+					Blackboard->Actions->resetSimulation = true;
+				}				
+			}
+			else 
+			{
+				// Enough of testing now restart the episode, this time , start learning again.
+				ofstream runInfoOut("runInfo.dat");
+				runInfoOut<<0;
+				runInfoOut.close();
+				
+			}
+
+						
+		}
+
 		
 		
 
@@ -357,8 +411,17 @@ public:
 			
 			if(!initialised)
 			{
-				cout<<"\n\n\nInitialising trial\n\n";				
-				m_parent->agent->initStepWiseTrial( 1,       true,       true,          NULL,          "trajectory.dat", false); //learning trial
+				cout<<"\n\n\nInitialising trial\n\n";
+				if (episodeNumber<= m_parent->mainP->Trials)
+					m_parent->agent->initStepWiseTrial( 1,       true,       true,          NULL,          "trajectory.dat", false); //learning trial
+				else
+				{
+					cout<<"\n\n\nTesting of learned policy  \n\n\n";
+					m_parent->agent->initStepWiseTrial( 1,       false,       false, &(TestStates[0]),     "trajectory.dat", false); //testing trail
+				}
+				 
+				
+				  //m_parent->agent->initTrial(m_parent->mainP->Steps, false, false, &(TestStates[j]), NULL,false);
 				initialised = true;
 			}
 
@@ -432,7 +495,7 @@ public:
 					
 					
 			}
-			else 
+			else if(m_time_in_state > 4000)
 			{
 				runCount++;
 				

@@ -19,6 +19,8 @@ class SarsaAgentRT : public Agent {
   double lambda; //parameter for the SARSA(lambda) learning algorithm
   double epsilon;//parameter for an epsilon greedy policy
 
+
+
  public:
   //SarsaAgentRT(double g, const ActionSet& a_s, StateActionFA* const f, Environment * const e);
   SarsaAgentRT(double g, ActionSet a_s, StateActionFA* const f, Environment * const e);
@@ -62,7 +64,9 @@ private:
 	int j;
 	double TDerror;
 	bool startedLearning;
+	double rememberEpsilon;
 	
+	double Qcurrent, Qnext;
 	double* Qv;	
 	
 	
@@ -85,6 +89,9 @@ private:
 	void startLearning(int N, bool SaveTrajectory);
 	
 	int stepActAndLearn(int N, bool SaveTrajectory);
+	
+	int stepAct(int N, bool SaveTrajectory, bool ComputeBellmanError);
+
 
 	
   int act(int N, bool SaveTrajectory, bool ComputeBellmanError);
@@ -101,7 +108,7 @@ private:
   */
 	
 
-  void chooseAction(const State& s, Action& a);
+  void chooseAction(const State& s, Action& a, bool islearning);
   /* Chooses and returns with argument "a" an action in state "s" 
      according to epsilon-greedy exploration strategy.
    */

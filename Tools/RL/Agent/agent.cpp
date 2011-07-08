@@ -154,11 +154,11 @@ int Agent::stepTrial(bool learning, bool SaveTrajectory, bool ComputeBellmanErro
 	}
 	else
 	{
-		steps=act(1, SaveTrajectory, ComputeBellmanError);
+		steps = stepAct(1, SaveTrajectory, ComputeBellmanError);
 	}
 	
 	//---------------------------------------------------
-	if(stepsInTrial>=2)
+	if(stepsInTrial>=2 && SaveTrajectory)
 	{
 			// Which stage
 			cout<< "Stage " << stepsInTrial << ": ";

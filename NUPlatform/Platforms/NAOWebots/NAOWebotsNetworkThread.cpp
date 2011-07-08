@@ -25,6 +25,8 @@
 #include "NUPlatform/NUIO/RoboCupGameControlData.h"
 #include "RoboCupGameControlDataWebots.h"
 #include "Infrastructure/TeamInformation/TeamInformation.h"
+#include "Infrastructure/NUSensorsData/NUSensorsData.h"
+#include "Infrastructure/NUBlackboard.h"
 
 #include <string>
 #include <sstream>
@@ -60,6 +62,7 @@ void NAOWebotsNetworkThread::periodicFunction()
         if (memcmp(data, GAMECONTROLLER_STRUCT_HEADER, sizeof(GAMECONTROLLER_STRUCT_HEADER)-1) == 0 and m_receiver->getDataSize() == sizeof(RoboCupGameControlDataWebots))
         {   // if it is a gamecontroller packet
             convertToGamePacket((RoboCupGameControlDataWebots*)data);
+            updateBallPosition((RoboCupGameControlDataWebots*)data);
             (*m_game_info) << m_game_packet;
         }
         else if (memcmp(data, TEAM_PACKET_STRUCT_HEADER, sizeof(TEAM_PACKET_STRUCT_HEADER)-1) == 0 and m_receiver->getDataSize() == sizeof(TeamPacket))
@@ -103,4 +106,13 @@ void NAOWebotsNetworkThread::convertToGamePacket(const RoboCupGameControlDataWeb
     m_game_packet->teams[1].goalColour = 0;
     m_game_packet->teams[1].score = data->teams[1].score; 
     memcpy(m_game_packet->teams[1].players, data->teams[1].players, sizeof(data->teams[1].players));
+}
+
+
+void NAOWebotsNetworkThread::updateBallPosition(RoboCupGameControlDataWebots* data) {
+	vector<float> ballGps(2,0);
+	ballGps[0] = data->ballXPos*100.f;
+	ballGps[1] = -data->ballZPos*100.f;
+	
+	Blackboard->Sensors->set(NUSensorsData::BallGps, Blackboard->Sensors->CurrentTime, ballGps);
 }

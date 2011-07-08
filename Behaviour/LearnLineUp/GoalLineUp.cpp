@@ -8,8 +8,9 @@
 
 #include "GoalLineUp.h"
 
-#define TARGET_THETA -180
-
+#define TARGET_THETA 0
+#define BALLINITIAL_X -50
+#define BALLINITIAL_Y 0
 
 #include "Infrastructure/Jobs/JobList.h"
 #include "Infrastructure/NUSensorsData/NUSensorsData.h"
@@ -72,10 +73,16 @@ void GoalLineUp::startState(State& start, bool& terminal)
 	//CurrentState.x[2] = 0;
 	//CurrentState.x[3] = 1;
 	double reward;
-	makeObservation(reward);
-	start=CurrentState;
+	makeObservation(reward, true);
+	makeObservation(reward, true);
+	start = CurrentState;
+	start.x[0] = 30;
+	start.x[1] = 0;
+	start.x[2] = 0;
+	start.x[3] = 0;
+	start.x[4] = 1;
 	terminal = false;
-	Stages=1;
+	Stages = 1;
 }
 
 void GoalLineUp::setState(const State& s, bool& terminal)
@@ -98,7 +105,7 @@ void GoalLineUp::setState(const State& s, bool& terminal)
 	Stages=1;
 }
 
-void GoalLineUp::makeObservation(double &reward)
+void GoalLineUp::makeObservation(double &reward, bool initial)
 {
 	static bool firstCall = true;
 	
@@ -121,7 +128,7 @@ void GoalLineUp::makeObservation(double &reward)
 		firstCall = false;
 		oldBallPos = ballPos;
 	}
-	
+	//cout<<"\nBall position : ["<<ballPos[0]<<", "<<ballPos[1]<<" ]";
 	
 	bool retVal = false;
 	
@@ -137,63 +144,95 @@ void GoalLineUp::makeObservation(double &reward)
 	targetPosition[1] = kickPosition[1];
 	
 	
-	Blackboard->Sensors->get(NUSensorsData::MotionWalkSpeed,currVel);
-	mixedSpeed = currVel[0]*currVel[1];
+	//Blackboard->Sensors->get(NUSensorsData::MotionWalkSpeed,currVel);
+	//mixedSpeed = (transVel + rotVel)/2;
 	
 	if(ball.estimatedDistance() >= 120)
 		CurrentState.x[0] = 120;
 	else
 		CurrentState.x[0] = ball.estimatedDistance();
 		
-	CurrentState.x[1] = mathGeneral::rad2deg(currPos[2]);
-	if (mixedSpeed > 1)
-		mixedSpeed = 1;
-	else
-		CurrentState.x[2] = mixedSpeed;
+	double currAngle = mathGeneral::rad2deg(currPos[2]);;
+	
+	if(currAngle < 0 )
+		currAngle = 180 + currAngle;
+	else 
+		currAngle = currAngle - 180;
+	
+	
+	
+	CurrentState.x[1] = currAngle;
+	
+	CurrentState.x[2] = transVel;
+	CurrentState.x[3] = rotVel;
 	
 	if (Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].isObjectVisible())
 	{
-		CurrentState.x[3] = 1;
+		CurrentState.x[4] = 1;
 		if(blindFrameCount>0)
 			blindFrameCount--;
 	}
 	else 
 	{
 		CurrentState.x[0] = s_last.x[0];  // if ball is not visible, donot decrease its distance from robot
-		CurrentState.x[3] = 0;
+		CurrentState.x[4] = 0;
 		cout<<"\nI cannot see the ball!";
 	}
+	
+	
+	//cout<<"\nBall position : ["<<ballPos[0]<<", "<<ballPos[1]<<" ]";
+	static int moved = 0;
+	int movedX = fabs(BALLINITIAL_X - ballPos[0]); 
+	int movedY = fabs( BALLINITIAL_Y - ballPos[1]);
+	//cout<<"\nBall moved condition : "<<movedX <<", "<<movedY<<"\n";
+	
 
-	if(checkTerminal())
-		reward = 10;
-
-	else if ( ( fabs(oldBallPos[1] - ballPos[1]) > 2 ) ||  ( fabs(oldBallPos[2] - ballPos[2]) > 2 ) )
+	if(!initial)
 	{
-		cout<<"\nBall moved, restarting with negative reward!";
-		reward = -10;
-		Blackboard->Actions->restartCondition = true;
+		if(checkTerminal() && Stages>2 )
+		{
+			reward = 100;	
+			//terminal = true;
+			cout<<"\n\n\nRewarding +ve heavily !\n\n\n\n\n\n";
+			Blackboard->Actions->restartCondition = true;
+		}
+	
+		if ( (movedX>2 || movedY>2))
+		{
+			moved++;
+			if (moved>2)
+			{
+				cout<<"\nBall moved, restarting with negative reward!";
+				reward = -10;
+			//	Blackboard->Actions->restartCondition = true;
+				
+			}		
+		}
+			
+		vector<float>roboPose(3,0);
+		Blackboard->Sensors->getGps(roboPose);
+		Blackboard->Sensors->getBallGps(ballPos);
+	
+		double balldistanceX = roboPose[0] - ballPos[0];
+		double balldistanceY = roboPose[1] - ballPos[1];
+	
 		
-	}
-
-	else if(CurrentState.x[3]==0 ||  !(Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].isObjectVisible()))
-	{
+		// cannot see the ball
+		if(CurrentState.x[4]==0) // ||  !(Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].isObjectVisible()))
+		{
 			reward = -10;
 			cout<<"\nReturning heavy -ve reward!\n\n";
+		}
+/*		else if ( balldistanceX < 25 && (transVel>0.25 || rotVel>0.25) ) //// if reached ball but still walking
+		{
+			cout<<"\nReturning heavy -ve reward!\n\n";
+			reward = -10;
+			Blackboard->Actions->restartCondition = true;
+		}
+ */
+		else 
+			reward = -1;
 	}
-	else if( (s_last.x[0] - CurrentState.x[0])>1)
-		reward = 0.5;
-	else if ( (CurrentState.x[0] - s_last.x[0])>1)
-		reward = -1;
-	else if ( CurrentState.x[0] < 20 && 
-	          (    ( fabs(transVel) <= 0.2) && (fabs(rotVel) <= mathGeneral::deg2rad(2) ) ) ) //// if reached ball but still walking
-	{
-		cout<<"\nReturning heavy -ve reward!\n\n";
-		reward = -10;
-		//Blackboard->Actions->restartCondition = true;
-	}
-	else 
-		reward = -1;
-	
 	
 }
 
@@ -203,13 +242,23 @@ bool GoalLineUp::checkTerminal()
 	//m_current_position = m_field_objects->self.wmState();
 	bool retVal = false;
 	//makeObservation();
+	
+	vector<float>roboPose(3,0);
+   	Blackboard->Sensors->getGps(roboPose);
+	Blackboard->Sensors->getBallGps(ballPos);
+	
+	double balldistanceX = roboPose[0] - ballPos[0];
+	double balldistanceY = roboPose[1] - ballPos[1];
+	
+cout<<"\nBall distance = [ "<<balldistanceX<<", "<<balldistanceY<<" ]\n";
+	
 	if (Blackboard->Objects->mobileFieldObjects[FieldObjects::FO_BALL].isObjectVisible())  
 	{
-		if (CurrentState.x[0] <=20)
+		if (balldistanceX<=25)
 		{
-			if( fabs(CurrentState.x[1]-TARGET_THETA) <2 )
+			if( fabs(CurrentState.x[1] - TARGET_THETA) <2 )
 			{
-				if (    ( fabs(transVel) <= 0.2) && (fabs(rotVel) <= mathGeneral::deg2rad(2) )  )
+				if (    ( fabs(transVel) <= 0.25) && (fabs(rotVel) <= 0.25) )
 				  {
 						retVal = true;
 				  }
@@ -269,34 +318,25 @@ void GoalLineUp::transition(const Action& action, State& s_new, double& r_new, b
 		
 		if (action.value == 1 ) // Increase Translation velocity
 		{
-			if ( transVel <1)
 				transVel += 0.25;
 				
 		}
 		else if (action.value == 2)  // Decrease Translation velocity
 		{
-			if (transVel >0)
 				transVel -= 0.25;			
+
+
 		}
 		else if (action.value == 3)  // Increase Angle
 		{
-			if (fabs(dirTheta) < mathGeneral::deg2rad(180))
-				dirTheta += mathGeneral::deg2rad(10);						
+				rotVel -= 0.25;
+							cout<<"\n----------------------- Decreasing rotation";
 		}
 		else if (action.value == 4)  // Decrease Angle
-		{
-			if (fabs(dirTheta) > mathGeneral::deg2rad(-180))
-				dirTheta -= mathGeneral::deg2rad(10);									
-		}
-		else if (action.value == 5)	 // Increase Rotational Velocity
-		{
-			if (rotVel < 1)
-				rotVel += 0.1;
-		}
-		else if (action.value == 6)	 // Decrease Rotational Velocity
-		{
-			if (rotVel > 0)
-				rotVel -= 0.1;				
+		{			
+				rotVel += 0.25;	
+				cout<<"\n----------------------- increasing rotation";
+			
 		}
 		
 		//cout<<" [ "<<CurrentState.x[0]<<", "<<CurrentState.x[1]<<", "<<CurrentState.x[2]<<" ] ";
@@ -305,7 +345,7 @@ void GoalLineUp::transition(const Action& action, State& s_new, double& r_new, b
 		WalkJob* walk = new WalkJob(transVel, dirTheta, rotVel);
 		Blackboard->Jobs->addMotionJob(walk);
 
-		
+
 	/*	if(checkTerminal())  // Makes observation and checks for terminal state
 		{
 			reward = 10;
@@ -314,7 +354,7 @@ void GoalLineUp::transition(const Action& action, State& s_new, double& r_new, b
 		else 
 			reward = -1;
 		*/
-		makeObservation(reward);
+		makeObservation(reward, false); // this will set values for currentState
 		
 		/*
 		
@@ -354,17 +394,13 @@ bool GoalLineUp::applicable(const State& s, const Action& a)
 		
 		int aVal = (int)a.value;
 		
-		if (aVal==1 && (transVel <=0.9) )
+		if (aVal==1 && (transVel <1) )
 				retVal = true;
 		else if (aVal==2  && (transVel >0) )
 				retVal = true;
-		else if (aVal==3  && (dirTheta < mathGeneral::deg2rad(180) ))
-				retVal = true;
-		else if (aVal==4  && (dirTheta > mathGeneral::deg2rad(0) ))
-				retVal = true;		
-		else if (aVal==5  && (rotVel  < 1 ))
+		else if (aVal==3  && (rotVel  > -1 ))
 				retVal = true;						
-		else if (aVal==6  && (rotVel  > 0 ))
+		else if (aVal==4  && (rotVel  < 1 ))
 				retVal = true;			
 		
 		return retVal;			
@@ -390,8 +426,8 @@ void GoalLineUp::bound(int i, bool& bounded, double& left, double& right)
 	bounded=true;
 	if (i==0) 
 	{	
-		left = -1;
-		right= 120;
+		left = 0;
+		right = 80;
 		return;
 	}
 	if (i==1)
@@ -405,6 +441,11 @@ void GoalLineUp::bound(int i, bool& bounded, double& left, double& right)
 		right = 1;
 	}
 	if (i==3)
+	{
+		left = -1;
+		right = 1;
+	}
+	if (i==4)
 	{
 		left = 0;
 		right = 1;

@@ -42,7 +42,7 @@ class GoalLineUp : public Environment{
   void uniformStateSample(State& s);
 	
 	
-  void makeObservation(double &);
+  void makeObservation(double &, bool);
 
   void startState(State& start, bool& terminal);
   /*	Selects start state according to the uniformly random distribution

@@ -40,7 +40,8 @@ public:
 private:
     void periodicFunction();
     void convertToGamePacket(const RoboCupGameControlDataWebots* data);
-    
+    void updateBallPosition(RoboCupGameControlDataWebots* data);
+	
     RoboCupGameControlData* m_game_packet;
     
     webots::Receiver* m_receiver;

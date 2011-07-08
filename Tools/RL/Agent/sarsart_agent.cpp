@@ -80,7 +80,7 @@ void SarsaAgentRT::startLearning(int N, bool SaveTrajectory)
 	
 	Qv = new double[actions.size];
 	
-	chooseAction(CurrentState, CurrentAction);
+	chooseAction(CurrentState, CurrentAction, true);
 	
 }
 
@@ -107,7 +107,7 @@ int SarsaAgentRT::stepActAndLearn(int N, bool SaveTrajectory)
 	env->transition(CurrentAction, NewState, CurrentReward, terminal);  //// Transit to next state                  A,R
     steps++;
     
-    chooseAction(NewState, NewAction);         ////  With new state, select an action                               S
+    chooseAction(NewState, NewAction, true);         ////  With new state, select an action                               S
     
     fa->predict(NewAction, NewState, Qvalue);  //// New reward                                                      A (SARSA)
     
@@ -168,7 +168,7 @@ int SarsaAgentRT::actAndLearn(int N, bool SaveTrajectory)
   
   double* Qv = new double[actions.size];
 
-  chooseAction(CurrentState, CurrentAction);
+  chooseAction(CurrentState, CurrentAction, true);
 
   while (i<N-1 && terminal==false)
   {
@@ -183,7 +183,7 @@ int SarsaAgentRT::actAndLearn(int N, bool SaveTrajectory)
     env->transition(CurrentAction, NewState, CurrentReward, terminal);  //// Transit to next state                  A,R
     steps++;
     
-    chooseAction(NewState, NewAction);         ////  With new state, select an action                               S
+    chooseAction(NewState, NewAction, true);         ////  With new state, select an action                               S
     
     fa->predict(NewAction, NewState, Qvalue);  //// New reward                                                      A (SARSA)
     
@@ -240,17 +240,18 @@ int SarsaAgentRT::act(int N, bool SaveTrajectory, bool ComputeBellmanError)
   if (ComputeBellmanError==true) BellmanError=0;
 	
   epsilon=0; 
-  chooseAction(CurrentState, CurrentAction);
+  chooseAction(CurrentState, CurrentAction, false);
 
   while (i<N-1 && terminal==false){
 
     env->transition(CurrentAction, NewState, CurrentReward, terminal);
-    chooseAction(NewState, NewAction);
+    chooseAction(NewState, NewAction, false);
     steps++;
     Return=Return+discount*CurrentReward;
     discount=discount*gamma;
 
-    if (ComputeBellmanError==true){
+    if (ComputeBellmanError==true)
+	{
       fa->predict(CurrentAction, CurrentState, Qcurrent);
       fa->predict(NewAction, NewState, Qnext);
       BellmanError+=(Qcurrent-(CurrentReward+gamma*Qnext))*(Qcurrent-(CurrentReward+gamma*Qnext));
@@ -281,7 +282,76 @@ int SarsaAgentRT::act(int N, bool SaveTrajectory, bool ComputeBellmanError)
 
 
 
-void SarsaAgentRT::chooseAction(const State& s, Action& a)
+
+
+int SarsaAgentRT::stepAct(int N, bool SaveTrajectory, bool ComputeBellmanError)
+
+{
+	static bool startedActing = false;
+	if (!startedActing) 
+	{
+		State NewState;
+		Action NewAction;
+		double discount = 1;
+		int i = 0;
+		rememberEpsilon = epsilon;
+		int steps = 0;
+		Qcurrent = 0;
+		Qnext = 0;
+		
+		if (ComputeBellmanError==true) BellmanError=0;
+
+		chooseAction(CurrentState, CurrentAction, false);
+		startedActing = true;
+	}
+	
+	epsilon = 0; 
+
+			
+	env->transition(CurrentAction, NewState, CurrentReward, terminal);             // (S) According to previous action, make a transition
+	chooseAction(NewState, NewAction, false);											   // (A) choose action
+	steps++;
+	Return = Return+discount*CurrentReward; 	
+	discount = discount*gamma;
+		
+	if (ComputeBellmanError==true)
+	{
+		fa->predict(CurrentAction, CurrentState, Qcurrent);
+		fa->predict(NewAction, NewState, Qnext);
+		BellmanError+=(Qcurrent-(CurrentReward+gamma*Qnext))*(Qcurrent-(CurrentReward+gamma*Qnext));
+	}
+		
+	if (SaveTrajectory==true)
+	{
+		trajectory->stage[i].state=CurrentState;
+		trajectory->stage[i].action=CurrentAction;
+		trajectory->stage[i].reward=CurrentReward;
+		trajectory->length=i+1;
+	}
+		
+	CurrentState = NewState;
+	CurrentAction = NewAction;
+
+	
+	if ((ComputeBellmanError==true) && (steps!=0))  BellmanError/=(double)steps;
+	
+	if (SaveTrajectory==true){
+		trajectory->stage[i].state=CurrentState;
+		trajectory->length=i+1;
+	}
+	
+	epsilon=rememberEpsilon;
+	return steps;
+}
+
+
+
+
+
+
+
+
+void SarsaAgentRT::chooseAction(const State& s, Action& a, bool islearning)
   /* Implements an epsilon-greedy policy
    */
 {
@@ -290,7 +360,7 @@ void SarsaAgentRT::chooseAction(const State& s, Action& a)
   int i;
   int id=0;	//selected action id
 	//cout<<"\n\nTotal Actions  : "<<actions.size;
-  for (i=0;i<actions.size;i++)
+  for (i=0;i<=actions.size;i++)
   {
 	 // cout<<"\t  , "<<actions.action[i] ;
     if (env->applicable(s,actions.action[i])==true)
@@ -298,6 +368,7 @@ void SarsaAgentRT::chooseAction(const State& s, Action& a)
 		  
 		  	ApplicableActions[NumberAA]=i;
 			NumberAA++;
+		 // cout<<"\nValue of applicable action = "<<actions.action[i].id;
 			
       }
   }
@@ -308,12 +379,13 @@ void SarsaAgentRT::chooseAction(const State& s, Action& a)
 		exit(EXIT_FAILURE);
     }
 
-  if ((double)rand()/(double)RAND_MAX <= epsilon) 
+  if  (    (  (double)rand()/(double)RAND_MAX <= epsilon)   && !islearning )
     //take any action uniformenly
     {	
 		
-      id=ApplicableActions[rand()%NumberAA];
-      a=actions.action[id];
+      id = ApplicableActions[rand()%NumberAA];
+      a = actions.action[id];
+		cout<<"\n-------------- taken a random action ----------\n";
     }
   else //select greedy ection
     {	
@@ -337,24 +409,37 @@ void SarsaAgentRT::chooseAction(const State& s, Action& a)
       NumberGreedyActions = 1;
       GreedyActions[0] = ApplicableActions[0];
 
+		
       for (i=1; i<NumberAA; i++)
       {
-		if (Values[i]>BestValue)
+		if (Values[i] > BestValue)
 		{
-			BestValue=Values[i];
-			NumberGreedyActions=1;
-			GreedyActions[0]=ApplicableActions[i];
+			BestValue = Values[i];
+			NumberGreedyActions = 1;
+			GreedyActions[0] = ApplicableActions[i];
 		}
 		if (Values[i]==BestValue)
 		{
 			NumberGreedyActions++;
-			GreedyActions[NumberGreedyActions-1]=ApplicableActions[i];
+			GreedyActions[NumberGreedyActions-1] = ApplicableActions[i];
 		}
       }
-		
-      gr=rand()%NumberGreedyActions;
-      a=actions.action[GreedyActions[gr]];
+	  if(NumberGreedyActions > 1)
+	  {
+		  gr = rand()%NumberGreedyActions;
+		  a = actions.action[GreedyActions[gr]];
+		  cout<<"\n-------------- taken one of a greedy actions ---------- : "<< BestValue<<"\n ";
 
+	  }
+	  else 
+	  {
+		  a = actions.action[GreedyActions[0]];
+		  cout<<"\n-------------- taken a greedy action ---------- : "<< BestValue<<"\n ";
+
+	  }
+
+	
+	  
       delete [] Values;
       delete [] GreedyActions;
 		
